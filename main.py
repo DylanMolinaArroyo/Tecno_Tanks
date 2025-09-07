@@ -1,7 +1,7 @@
 import pygame, sys
-from settings import *
-from button import Button
-from level import Level
+from Code.Utilities.settings import *
+from Code.UI.button import Button
+from Code.Classes.level import Level
 
 class Game:
     def __init__(self):
@@ -27,12 +27,12 @@ class Game:
         self.quit_end_button = Button(pos=(640, 500),
                             text_input="QUIT", font=self.get_font(55), base_color="black", hovering_color="White")
 
-        self.bg_image = pygame.image.load("graphics/tilemap/EscenarioJuego.png")
+        self.bg_image = pygame.image.load("Assets/Map_tiles/EscenarioJuego.png")
         self.bg_image = pygame.transform.scale(self.bg_image, (WIDTH + 50, HEIGTH + 50))
         self.level = None
 
         #Music
-        main_sound = pygame.mixer.Sound('audio/8-bit_-Sabaton-The-Last-Battle.ogg')
+        main_sound = pygame.mixer.Sound('Assets/Audio/8-bit_-Sabaton-The-Last-Battle.ogg')
         main_sound.play(loops= -1)
         
     def get_font(self, size):
@@ -70,7 +70,7 @@ class Game:
         if self.level.player.health <= 0:
             self.win = False
             self.state = 'end'
-        elif self.level.all_enemies_defeated():  # Definir 'all_enemies_defeated' en level
+        elif self.level.all_enemies_defeated():
             self.win = True
             self.state = 'end'
 
@@ -105,7 +105,7 @@ class Game:
                 elif self.state == 'end':
                     if self.restart_button.checkForInput(mouse_pos):
                         self.state = 'play'
-                        self.level = None  # Reset the level
+                        self.level = None
                     elif self.quit_end_button.checkForInput(mouse_pos):
                         pygame.quit()
                         sys.exit()
