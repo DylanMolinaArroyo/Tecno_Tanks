@@ -4,6 +4,9 @@ HEIGTH   = 720
 FPS      = 60
 TILESIZE = 64
 
+TILEWIDTH = 64
+TILEHEIGHT = 128
+
 # ui
 BAR_HEIGHT = 20
 HEALTH_BAR_WIDTH = 200
@@ -13,5 +16,5 @@ UI_FONTSIZE = 18
 
 # enemy
 tanks_data =  {
-   'enemyTank':{'health': 2, 'damage':1,'attack_sound':'audio/attack/slash.wav', 'speed': 3, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 500}
+   'enemyTank':{'health': 2, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 500}
 }

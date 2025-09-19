@@ -11,17 +11,24 @@ class Game:
         pygame.display.set_caption('TecTanks')
         self.clock = pygame.time.Clock()
 
-        self.state = 'menu'  # state can be 'menu', 'play', 'end'
-        self.win = False  # Track if the player won or lost
+        self.state = 'menu'  # 'menu', 'choose', 'play', 'end'
+        self.win = False  
         
         self.font = pygame.font.Font(UI_FONT, 45)
 
-        self.play_button = Button(pos=(640, 400), 
+        # Main menu buttons
+        self.play_button = Button(pos=(200, 400), 
                             text_input="PLAY", font=self.get_font(55), base_color="black", hovering_color="White")
-        self.quit_button = Button(pos=(640, 500), 
+        self.quit_button = Button(pos=(200, 500), 
                             text_input="QUIT", font=self.get_font(55), base_color="black", hovering_color="White")
         
-        # Buttons for end menu
+        # Mode selection buttons
+        self.choose_mode_one_player_button = Button(pos=(640, 400), 
+                            text_input="ONE PLAYER", font=self.get_font(55), base_color="black", hovering_color="White")
+        self.choose_mode_multiplayer_button = Button(pos=(640, 500), 
+                            text_input="MULTIPLAYER", font=self.get_font(55), base_color="black", hovering_color="White")
+    
+        # End menu buttons
         self.restart_button = Button(pos=(640, 400),
                             text_input="RESTART", font=self.get_font(55), base_color="black", hovering_color="White")
         self.quit_end_button = Button(pos=(640, 500),
@@ -55,9 +62,19 @@ class Game:
         self.screen.blit(self.bg_image, (0, 0))
         menu_mouse_pos = pygame.mouse.get_pos()
 
-        self.draw_text_with_outline(self.screen, "TEC TANKS", self.get_font(100), "black", "white", (640, 200), outline_width=5)
+        self.draw_text_with_outline(self.screen, "TEC TANKS", self.get_font(100), "black", "white", (450, 200), outline_width=5)
 
         for button in [self.play_button, self.quit_button]:
+            button.changeColor(menu_mouse_pos)
+            button.update(self.screen)
+
+    def play_menu(self):
+        self.screen.blit(self.bg_image, (0, 0))
+        menu_mouse_pos = pygame.mouse.get_pos()
+
+        self.draw_text_with_outline(self.screen, "SELECT MODE", self.get_font(100), "black", "white", (640, 200), outline_width=5)
+
+        for button in [self.choose_mode_one_player_button, self.choose_mode_multiplayer_button]:
             button.changeColor(menu_mouse_pos)
             button.update(self.screen)
 
@@ -66,7 +83,6 @@ class Game:
             self.level = Level()  
         self.level.run()
         
-        # Check if game over or player wins, then transition to 'end' state
         if self.level.player.health <= 0:
             self.win = False
             self.state = 'end'
@@ -78,7 +94,6 @@ class Game:
         self.screen.blit(self.bg_image, (0, 0))
         end_mouse_pos = pygame.mouse.get_pos()
 
-        # Show different text based on win or lose
         if self.win:
             self.draw_text_with_outline(self.screen, "YOU WON", self.get_font(100), "black", "white", (640, 200), outline_width=5)
         else:
@@ -98,13 +113,21 @@ class Game:
 
                 if self.state == 'menu':
                     if self.play_button.checkForInput(mouse_pos):
-                        self.state = 'play'
+                        self.state = 'choose'
                     elif self.quit_button.checkForInput(mouse_pos):
                         pygame.quit()
                         sys.exit()
+
+                elif self.state == 'choose':
+                    if self.choose_mode_one_player_button.checkForInput(mouse_pos):
+                        self.state = 'play'
+                        self.level = None
+                    elif self.choose_mode_multiplayer_button.checkForInput(mouse_pos):
+                        print("Multiplayer")
+                        
                 elif self.state == 'end':
                     if self.restart_button.checkForInput(mouse_pos):
-                        self.state = 'play'
+                        self.state = 'choose'
                         self.level = None
                     elif self.quit_end_button.checkForInput(mouse_pos):
                         pygame.quit()
@@ -116,6 +139,8 @@ class Game:
 
             if self.state == 'menu':
                 self.main_menu()
+            elif self.state == 'choose':
+                self.play_menu()
             elif self.state == 'play':
                 self.play()
             elif self.state == 'end':
