@@ -27,6 +27,7 @@ class Enemy(Entity):
         enemy_info = tanks_data[self.enemy_name]
         self.health = enemy_info['health']
         self.speed = enemy_info['speed']
+        self.bullet_speed = enemy_info['bullet_speed']
         self.attack_damage = enemy_info['damage']
         self.resistance = enemy_info['resistance']
         self.attack_radius = enemy_info['attack_radius']
@@ -143,7 +144,7 @@ class Enemy(Entity):
     def attack(self):
         self.sounds['attack_sound'].play()
         if self.create_bullet:
-            self.create_bullet(self)
+            self.create_bullet(self, self.bullet_speed)
             self.attack_time = pygame.time.get_ticks()
         self.can_attack = False 
         self.state_locked = True

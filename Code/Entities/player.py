@@ -19,7 +19,8 @@ class Player(Entity):
         self.status = 'up'
 
         # Movement
-        self.speed = 5
+        self.speed = 6
+        self.bullet_speed = 8
         self.attacking = False
         self.attack_cooldown = 800
         self.attack_time = None
@@ -86,7 +87,7 @@ class Player(Entity):
         if keys[pygame.K_SPACE] and not self.attacking:
             self.attacking = True
             self.attack_time = pygame.time.get_ticks()
-            self.create_bullet(self)
+            self.create_bullet(self, self.bullet_speed)
             self.sounds['attack_sound'].play()
 
     def get_status(self):

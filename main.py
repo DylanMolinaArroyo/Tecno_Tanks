@@ -8,7 +8,7 @@ class Game:
         pygame.init()
         
         self.screen = pygame.display.set_mode((WIDTH, HEIGTH))
-        pygame.display.set_caption('TecTanks')
+        pygame.display.set_caption('TecTanks')a
         self.clock = pygame.time.Clock()
 
         self.state = 'menu'  # 'menu', 'choose', 'play', 'end'
@@ -137,14 +137,15 @@ class Game:
         while True:
             self.check_events()
 
-            if self.state == 'menu':
-                self.main_menu()
-            elif self.state == 'choose':
-                self.play_menu()
-            elif self.state == 'play':
-                self.play()
-            elif self.state == 'end':
-                self.end_menu()
+            match self.state:
+                case 'menu':
+                    self.main_menu()
+                case 'choose':
+                    self.play_menu()
+                case 'play':
+                    self.play()
+                case 'end':
+                    self.end_menu()
 
             pygame.display.update()
             self.clock.tick(FPS)

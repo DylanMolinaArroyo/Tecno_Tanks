@@ -27,7 +27,7 @@ def a_star(jugador, enemigo, matrix):
     jugador = tuple(jugador)
     enemigo = tuple(enemigo)
 
-    open_set = [(manhattan_distance(jugador, enemigo), jugador)]  # (fScore, node)
+    open_set = [(manhattan_distance(jugador, enemigo), jugador)]
     came_from = {}
     g_score = {jugador: 0}
     f_score = {jugador: manhattan_distance(jugador, enemigo)}

@@ -1,4 +1,3 @@
-import random
 import pygame
 
 from Code.Classes import path_request
@@ -10,7 +9,6 @@ from Code.Classes.tile import Tile
 from Code.Entities.player import Player
 from Code.UI.ui import UI
 from random import choice
-import numpy as np
 
 class Level:
     def __init__(self):
@@ -35,32 +33,36 @@ class Level:
 
     def create_map(self):
         layouts = {
-            'boundary': import_csv_layout('Assets/Map_matrix2/EscenarioJuego._Obstaculos.csv'),
-            'grass': import_csv_layout('Assets/Map_matrix2/EscenarioJuego._Pasto.csv'),
-            'enemies': import_csv_layout('Assets/Map_matrix2/EscenarioJuego._Enemigos.csv')
+            'boundary': import_csv_layout('Assets/Map_matrix/EscenarioJuego._Obstaculos.csv'),
+            'grass': import_csv_layout('Assets/Map_matrix/EscenarioJuego._Pasto.csv'),
+            'enemies': import_csv_layout('Assets/Map_matrix/EscenarioJuego._Enemigos.csv')
         }
         graphics = {
             'grass': import_folder('Assets/Objects/Attackable/grass'),
-            'objects': pygame.image.load('Assets/Objects/Unbreakable/rock.png').convert_alpha()
+            'rock': pygame.image.load('Assets/Objects/Unbreakable/rock.png').convert_alpha(),
+            'wall': pygame.image.load('Assets/Objects/Attackable/Wall/Wall64.png').convert_alpha()
         }
 
         enemieCoords = layouts['enemies']
 
-        self.player = Player((1280, 1680), [self.visible_sprites, self.attackble_sprites], self.obstacle_sprites, self.create_bullet)
+        self.player = Player((2020, 1900), [self.visible_sprites, self.attackble_sprites], self.obstacle_sprites, self.create_bullet)
 
         for style, layout in layouts.items():
             for row_index, row in enumerate(layout):
                 for col_index, col in enumerate(row):
                     if col != '-1':                        
-                        x = col_index * TILEHEIGHT
-                        y = row_index * TILEWIDTH
+                        x = col_index * TILESIZE
+                        y = row_index * TILESIZE
                         
                         if style == 'boundary':
-                            if col == '395':
-                                Tile((x, y), [self.obstacle_sprites], 'invisible')
-                            if col == '1':
-                                rock_image = graphics['objects'] 
-                                Tile((x, y), [self.visible_sprites, self.obstacle_sprites], 'rocks', rock_image)
+                            match col:
+                                case "395":
+                                    Tile((x, y), [self.obstacle_sprites], 'invisible')
+                                case "1":
+                                    Tile((x, y), [self.visible_sprites, self.obstacle_sprites], 'rocks', graphics['rock'])
+                                case "3":
+                                    Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'walls', graphics['wall'])
+                                    
                         if style == 'grass':
                             random_grass_image = choice(graphics['grass'])
                             Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'grass', random_grass_image)
@@ -68,8 +70,8 @@ class Level:
         for i in range(20):
             coordenates = get_random_position(enemieCoords)
             self.enemy = Enemy(
-                'enemyTank', 
-                (coordenates[0] * TILEWIDTH, coordenates[1] * TILEHEIGHT),
+                'enemyTankType1', 
+                (coordenates[0] * TILESIZE, coordenates[1] * TILESIZE),
                 [self.visible_sprites, self.attackble_sprites],
                 self.obstacle_sprites,
                 self.damage_player,
@@ -78,30 +80,28 @@ class Level:
                 self.path_request
             )
 
-    def create_bullet(self, origin):
-        Bullet(origin, self.obstacle_sprites, [self.visible_sprites, self.bullet_sprites])
+    def create_bullet(self, origin, bullet_speed):
+        Bullet(origin, self.obstacle_sprites, [self.visible_sprites, self.bullet_sprites], bullet_speed)
 
     def player_attack_logic(self):
         if self.bullet_sprites:
             for bullet_sprite in self.bullet_sprites:
-                collision_sprites = pygame.sprite.spritecollide(bullet_sprite, self.attackble_sprites, False)
+                collision_sprites = pygame.sprite.spritecollide(bullet_sprite, self.attackble_sprites, False, pygame.sprite.collide_mask)
                 if collision_sprites:
                     for target_sprite in collision_sprites:
-                        if target_sprite.sprite_type == 'grass':
+                        if target_sprite.sprite_type == 'grass' or target_sprite.sprite_type == 'walls':
                             target_sprite.kill()
 
                         elif target_sprite.sprite_type == 'player' and bullet_sprite.origin_type != 'player':
                             target_sprite.get_damage(self.enemy, bullet_sprite.sprite_type)
-                            bullet_sprite.kill()
 
                         elif target_sprite.sprite_type == 'enemy' and bullet_sprite.origin_type == 'player':
                             target_sprite.get_damage(self.player, bullet_sprite.sprite_type)
-                            bullet_sprite.kill()
 
                         bullet_sprite.kill()
 
     
-    def damage_player(self,amount, attack_type):
+    def damage_player(self,amount):
         if self.player.vulnerable:
             self.player.health -+ amount
             self.player.vulnerable = False
@@ -128,11 +128,11 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.offset = pygame.math.Vector2()
 
         # creating the floor
-        self.floor_surf = pygame.image.load('Assets/Map_tiles2/EscenarioJuego.png').convert()
+        self.floor_surf = pygame.image.load('Assets/Map_tiles/EscenarioJuego.png').convert()
         self.floor_rect = self.floor_surf.get_rect(topleft=(0, 0))
 
         # Zoom camera
-        self.zoom_factor = 0.7  # Zoom out 
+        self.zoom_factor = 0.6  # Zoom out 
 
     def custom_draw(self, player):
 
