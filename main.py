@@ -8,7 +8,7 @@ class Game:
         pygame.init()
         
         self.screen = pygame.display.set_mode((WIDTH, HEIGTH))
-        pygame.display.set_caption('TecTanks')a
+        pygame.display.set_caption('TecTanks')
         self.clock = pygame.time.Clock()
 
         self.state = 'menu'  # 'menu', 'choose', 'play', 'end'
