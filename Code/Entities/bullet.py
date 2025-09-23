@@ -10,12 +10,12 @@ class Bullet(pygame.sprite.Sprite):
         
         direction = entity.status.split('_')[0]
 
-        # Imagen y máscara
         self.image = pygame.image.load('Assets/Entities/Bullet/bullet.png').convert_alpha() 
         self.image = pygame.transform.scale(self.image, (25, 25))
-        self.rect = self.image.get_rect()
-        self.mask = pygame.mask.from_surface(self.image)  # ← importante
 
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        
         offset = 10
         self.bullet_speed = bullet_speed
 
@@ -39,10 +39,8 @@ class Bullet(pygame.sprite.Sprite):
         self.tile_sprites = tile_sprites
 
     def update(self):
-        # Movimiento
         self.rect.x += self.direction.x * self.speed
         self.rect.y += self.direction.y * self.speed
 
-        # Colisión con muros usando máscara
-        if pygame.sprite.spritecollide(self, self.tile_sprites, False, pygame.sprite.collide_mask):
+        if pygame.sprite.spritecollideany(self, self.tile_sprites):
             self.kill()

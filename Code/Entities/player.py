@@ -143,6 +143,15 @@ class Player(Entity):
         if self.health <= 0:
             self.kill()
 
+    def debug_draw(self, surface, offset):
+        debug_rect = self.rect.copy()
+        debug_rect.topleft -= offset 
+        pygame.draw.rect(surface, (255, 0, 0), debug_rect, 2)
+
+        debug_hitbox = self.hitbox.copy()
+        debug_hitbox.topleft -= offset
+        pygame.draw.rect(surface, (0, 255, 0), debug_hitbox, 2)
+
     def update(self):
         self.input()
         self.check_death()

@@ -136,7 +136,6 @@ class Game:
     def run(self):
         while True:
             self.check_events()
-
             match self.state:
                 case 'menu':
                     self.main_menu()

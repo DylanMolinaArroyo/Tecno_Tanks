@@ -40,12 +40,14 @@ class Level:
         graphics = {
             'grass': import_folder('Assets/Objects/Attackable/grass'),
             'rock': pygame.image.load('Assets/Objects/Unbreakable/rock.png').convert_alpha(),
-            'wall': pygame.image.load('Assets/Objects/Attackable/Wall/Wall64.png').convert_alpha()
+            'wall': pygame.image.load('Assets/Objects/Attackable/Wall/Wall64.png').convert_alpha(),
+            'house': pygame.image.load('Assets/Objects/Attackable/house/house.png').convert_alpha()
+
         }
 
         enemieCoords = layouts['enemies']
 
-        self.player = Player((2020, 1900), [self.visible_sprites, self.attackble_sprites], self.obstacle_sprites, self.create_bullet)
+        self.player = Player((2020, 6700), [self.visible_sprites, self.attackble_sprites], self.obstacle_sprites, self.create_bullet)
 
         for style, layout in layouts.items():
             for row_index, row in enumerate(layout):
@@ -61,7 +63,9 @@ class Level:
                                 case "1":
                                     Tile((x, y), [self.visible_sprites, self.obstacle_sprites], 'rocks', graphics['rock'])
                                 case "3":
-                                    Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'walls', graphics['wall'])
+                                    Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'walls', graphics['wall'],)
+                                case "7":
+                                    Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'house', graphics['house'], hitbox_top=60)
                                     
                         if style == 'grass':
                             random_grass_image = choice(graphics['grass'])
@@ -86,20 +90,23 @@ class Level:
     def player_attack_logic(self):
         if self.bullet_sprites:
             for bullet_sprite in self.bullet_sprites:
-                collision_sprites = pygame.sprite.spritecollide(bullet_sprite, self.attackble_sprites, False, pygame.sprite.collide_mask)
+                collision_sprites = pygame.sprite.spritecollide(
+                    bullet_sprite, self.attackble_sprites, False, pygame.sprite.collide_mask
+                )                
                 if collision_sprites:
                     for target_sprite in collision_sprites:
-                        if target_sprite.sprite_type == 'grass' or target_sprite.sprite_type == 'walls':
-                            target_sprite.kill()
-
+                        if target_sprite.sprite_type in ['grass', 'walls']:
+                            if bullet_sprite.rect.colliderect(target_sprite.hitbox):
+                                target_sprite.kill()
+                                bullet_sprite.kill()
+                                break 
                         elif target_sprite.sprite_type == 'player' and bullet_sprite.origin_type != 'player':
                             target_sprite.get_damage(self.enemy, bullet_sprite.sprite_type)
+                            bullet_sprite.kill()
 
                         elif target_sprite.sprite_type == 'enemy' and bullet_sprite.origin_type == 'player':
                             target_sprite.get_damage(self.player, bullet_sprite.sprite_type)
-
-                        bullet_sprite.kill()
-
+                            bullet_sprite.kill()
     
     def damage_player(self,amount):
         if self.player.vulnerable:
@@ -111,13 +118,18 @@ class Level:
         return not any(sprite for sprite in self.visible_sprites if hasattr(sprite, 'sprite_type') and sprite.sprite_type == 'enemy')
 
     def run(self):
-        # update and draw the game
-        self.visible_sprites.custom_draw(self.player)
+        # IMPORTANT TO KEEP IN THIS ORDER
+
+        # 1 - Logic and sprites
         self.visible_sprites.update()
         self.visible_sprites.enemy_update(self.player)
         self.player_attack_logic()
         self.bullet_sprites.update()
+
+        # 2 - Draw everything
+        self.visible_sprites.custom_draw(self.player)
         self.ui.display(self.player)
+
 
 class YSortCameraGroup(pygame.sprite.Group):
     def __init__(self):
@@ -132,29 +144,53 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.floor_rect = self.floor_surf.get_rect(topleft=(0, 0))
 
         # Zoom camera
-        self.zoom_factor = 0.6  # Zoom out 
+        self.zoom_factor = 0.7  # Zoom out 
 
     def custom_draw(self, player):
+        screen_w, screen_h = self.display_surface.get_size()
 
-        # getting the offset
-        self.offset.x = (player.rect.centerx - self.half_width) * self.zoom_factor
-        self.offset.y = (player.rect.centery - self.half_height) * self.zoom_factor
+        self.offset.x = player.rect.centerx - (self.half_width / self.zoom_factor)
+        self.offset.y = player.rect.centery - (self.half_height / self.zoom_factor)
 
-        # drawing the floor
-        floor_offset_pos = (self.floor_rect.topleft - self.offset) * self.zoom_factor
-        scaled_floor = pygame.transform.scale(self.floor_surf, 
-                                              (int(self.floor_surf.get_width() * self.zoom_factor), 
-                                               int(self.floor_surf.get_height() * self.zoom_factor)))
-        self.display_surface.blit(scaled_floor, floor_offset_pos)
+        # Rectangle of the camera coordinates
+        camera_world_rect = pygame.Rect(
+            int(self.offset.x),
+            int(self.offset.y),
+            int(screen_w / self.zoom_factor),
+            int(screen_h / self.zoom_factor)
+        )
 
-        # draw sprites
-        for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
-            offset_pos = (sprite.rect.topleft - self.offset) * self.zoom_factor
-            scaled_sprite = pygame.transform.scale(sprite.image, 
-                                                   (int(sprite.image.get_width() * self.zoom_factor), 
-                                                    int(sprite.image.get_height() * self.zoom_factor)))
-            self.display_surface.blit(scaled_sprite, offset_pos)
-    
+        # Draw floor
+        scaled_floor = pygame.transform.scale(
+            self.floor_surf,
+            (int(self.floor_surf.get_width() * self.zoom_factor),
+             int(self.floor_surf.get_height() * self.zoom_factor))
+        )
+        floor_screen_pos = ((self.floor_rect.left - self.offset.x) * self.zoom_factor,
+                            (self.floor_rect.top  - self.offset.y) * self.zoom_factor)
+
+        # Only blit if it intersects with the screen
+        floor_screen_rect = scaled_floor.get_rect(topleft=(int(floor_screen_pos[0]), int(floor_screen_pos[1])))
+        if self.display_surface.get_rect().colliderect(floor_screen_rect):
+            self.display_surface.blit(scaled_floor, floor_screen_rect.topleft)
+
+        # Draw only sprites inside the camera (world culling)
+        for sprite in sorted(self.sprites(), key=lambda s: s.rect.centery):
+            # If the sprite's rect (in world) doesn't intersect the camera, skip it
+            if not camera_world_rect.colliderect(sprite.rect):
+                continue
+
+            # Position and size on screen (with zoom)
+            screen_x = int((sprite.rect.left  - self.offset.x) * self.zoom_factor)
+            screen_y = int((sprite.rect.top   - self.offset.y) * self.zoom_factor)
+            screen_w_s = int(sprite.rect.width  * self.zoom_factor)
+            screen_h_s = int(sprite.rect.height * self.zoom_factor)
+
+            # Scale the image (warning: expensive if done every frame)
+            scaled_sprite = pygame.transform.scale(sprite.image, (screen_w_s, screen_h_s))
+
+            self.display_surface.blit(scaled_sprite, (screen_x, screen_y))
+        
     def enemy_update(self, player):
         enemy_sprites = [sprite for sprite in self.sprites() if hasattr(sprite,'sprite_type') and sprite.sprite_type == 'enemy']
         for enemy in enemy_sprites:
