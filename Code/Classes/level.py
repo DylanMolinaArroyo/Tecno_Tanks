@@ -11,7 +11,7 @@ from Code.UI.ui import UI
 from random import choice
 
 class Level:
-    def __init__(self):
+    def __init__(self, difficulty_config):
         # get the display surface 
         self.display_surface = pygame.display.get_surface()
 
@@ -33,9 +33,9 @@ class Level:
 
     def create_map(self):
         layouts = {
-            'boundary': import_csv_layout('Assets/Map_matrix/EscenarioJuego._Obstaculos.csv'),
-            'grass': import_csv_layout('Assets/Map_matrix/EscenarioJuego._Pasto.csv'),
-            'enemies': import_csv_layout('Assets/Map_matrix/EscenarioJuego._Enemigos.csv')
+            'boundary': import_csv_layout('Assets/Map_matrix/MapaJuego_Obstaculos.csv'),
+            'grass': import_csv_layout('Assets/Map_matrix/MapaJuego_Pasto.csv'),
+            'enemies': import_csv_layout('Assets/Map_matrix/MapaJuego_Enemigos.csv')
         }
         graphics = {
             'grass': import_folder('Assets/Objects/Attackable/grass'),
@@ -47,7 +47,7 @@ class Level:
 
         enemieCoords = layouts['enemies']
 
-        self.player = Player((2020, 6700), [self.visible_sprites, self.attackble_sprites], self.obstacle_sprites, self.create_bullet)
+        self.player = Player((2020, 2700), [self.visible_sprites, self.attackble_sprites], self.obstacle_sprites, self.create_bullet)
 
         for style, layout in layouts.items():
             for row_index, row in enumerate(layout):
@@ -61,10 +61,10 @@ class Level:
                                 case "395":
                                     Tile((x, y), [self.obstacle_sprites], 'invisible')
                                 case "1":
-                                    Tile((x, y), [self.visible_sprites, self.obstacle_sprites], 'rocks', graphics['rock'])
+                                    Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'rocks', graphics['rock'])
                                 case "3":
                                     Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'walls', graphics['wall'],)
-                                case "7":
+                                case "5":
                                     Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'house', graphics['house'], hitbox_top=60)
                                     
                         if style == 'grass':
@@ -74,7 +74,7 @@ class Level:
         for i in range(20):
             coordenates = get_random_position(enemieCoords)
             self.enemy = Enemy(
-                'enemyTankType1', 
+                'enemyTankType2', 
                 (coordenates[0] * TILESIZE, coordenates[1] * TILESIZE),
                 [self.visible_sprites, self.attackble_sprites],
                 self.obstacle_sprites,
@@ -85,28 +85,33 @@ class Level:
             )
 
     def create_bullet(self, origin, bullet_speed):
-        Bullet(origin, self.obstacle_sprites, [self.visible_sprites, self.bullet_sprites], bullet_speed)
+        Bullet(origin, self.obstacle_sprites, [self.visible_sprites, self.bullet_sprites], bullet_speed, self.visible_sprites)
 
     def player_attack_logic(self):
         if self.bullet_sprites:
             for bullet_sprite in self.bullet_sprites:
                 collision_sprites = pygame.sprite.spritecollide(
-                    bullet_sprite, self.attackble_sprites, False, pygame.sprite.collide_mask
+                    bullet_sprite, self.attackble_sprites, False
                 )                
                 if collision_sprites:
                     for target_sprite in collision_sprites:
                         if target_sprite.sprite_type in ['grass', 'walls']:
                             if bullet_sprite.rect.colliderect(target_sprite.hitbox):
                                 target_sprite.kill()
-                                bullet_sprite.kill()
-                                break 
+                                bullet_sprite.explode_and_kill()
+                                break
+
                         elif target_sprite.sprite_type == 'player' and bullet_sprite.origin_type != 'player':
                             target_sprite.get_damage(self.enemy, bullet_sprite.sprite_type)
-                            bullet_sprite.kill()
+                            bullet_sprite.explode_and_kill()
 
                         elif target_sprite.sprite_type == 'enemy' and bullet_sprite.origin_type == 'player':
                             target_sprite.get_damage(self.player, bullet_sprite.sprite_type)
-                            bullet_sprite.kill()
+                            bullet_sprite.explode_and_kill()
+
+                        elif target_sprite.sprite_type == 'rocks' and bullet_sprite.origin_type == 'player' or bullet_sprite.origin_type == 'enemy':
+                            bullet_sprite.explode_and_kill()
+
     
     def damage_player(self,amount):
         if self.player.vulnerable:
@@ -140,7 +145,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.offset = pygame.math.Vector2()
 
         # creating the floor
-        self.floor_surf = pygame.image.load('Assets/Map_tiles/EscenarioJuego.png').convert()
+        self.floor_surf = pygame.image.load('Assets/Map_tiles/MapaJuego.png').convert()
         self.floor_rect = self.floor_surf.get_rect(topleft=(0, 0))
 
         # Zoom camera

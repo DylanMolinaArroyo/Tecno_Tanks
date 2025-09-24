@@ -16,7 +16,6 @@ class Tile(pygame.sprite.Sprite):
         self.image = surface
 
         self.rect = self.image.get_rect(topleft=pos)
-        self.mask = pygame.mask.from_surface(self.image)
 
         self.hitbox = self.rect.copy()
         self.hitbox.x += hitbox_left

@@ -8,7 +8,7 @@ class Game:
         pygame.init()
         
         self.screen = pygame.display.set_mode((WIDTH, HEIGTH))
-        pygame.display.set_caption('TecTanks')
+        pygame.display.set_caption('TecnoTanks')
         self.clock = pygame.time.Clock()
 
         self.state = 'menu'  # 'menu', 'choose', 'play', 'end'
@@ -27,16 +27,28 @@ class Game:
                             text_input="ONE PLAYER", font=self.get_font(55), base_color="black", hovering_color="White")
         self.choose_mode_multiplayer_button = Button(pos=(640, 500), 
                             text_input="MULTIPLAYER", font=self.get_font(55), base_color="black", hovering_color="White")
-    
+        
+        # Dificulty selection buttons
+        self.choose_easy_mode_button = Button(pos=(640, 200), 
+                            text_input="EASY", font=self.get_font(55), base_color="black", hovering_color="White")
+        self.choose_medium_mode_button = Button(pos=(640, 300), 
+                            text_input="MEDIUM", font=self.get_font(55), base_color="black", hovering_color="White")
+        self.choose_hard_mode_button = Button(pos=(640, 400), 
+                            text_input="HARD", font=self.get_font(55), base_color="black", hovering_color="White")
+        self.choose_nightmare_mode_button = Button(pos=(640, 500), 
+                            text_input="NIGHTMARE", font=self.get_font(55), base_color="black", hovering_color="White")
+        
         # End menu buttons
         self.restart_button = Button(pos=(640, 400),
                             text_input="RESTART", font=self.get_font(55), base_color="black", hovering_color="White")
         self.quit_end_button = Button(pos=(640, 500),
                             text_input="QUIT", font=self.get_font(55), base_color="black", hovering_color="White")
 
-        self.bg_image = pygame.image.load("Assets/Map_tiles/EscenarioJuego.png")
+        self.bg_image = pygame.image.load("Assets/Map_tiles/MapaJuego.png")
         self.bg_image = pygame.transform.scale(self.bg_image, (WIDTH + 50, HEIGTH + 50))
+
         self.level = None
+        self.difficulty = None
 
         #Music
         main_sound = pygame.mixer.Sound('Assets/Audio/8-bit_-Sabaton-The-Last-Battle.ogg')
@@ -62,7 +74,7 @@ class Game:
         self.screen.blit(self.bg_image, (0, 0))
         menu_mouse_pos = pygame.mouse.get_pos()
 
-        self.draw_text_with_outline(self.screen, "TEC TANKS", self.get_font(100), "black", "white", (450, 200), outline_width=5)
+        self.draw_text_with_outline(self.screen, "TECNO TANKS", self.get_font(100), "black", "white", (450, 200), outline_width=5)
 
         for button in [self.play_button, self.quit_button]:
             button.changeColor(menu_mouse_pos)
@@ -78,9 +90,47 @@ class Game:
             button.changeColor(menu_mouse_pos)
             button.update(self.screen)
 
+    def select_difficulty_menu(self):
+        self.screen.blit(self.bg_image, (0, 0))
+        menu_mouse_pos = pygame.mouse.get_pos()
+
+        difficulties = {
+            "easy": {"enemyTankType1": 20, "enemyTankType2": 20, "enemyTankType3": 10, "enemyTankType4": 5},
+            "medium": {"enemyTankType1": 10, "enemyTankType2": 10, "enemyTankType3": 15, "enemyTankType4": 10},
+            "hard": {"enemyTankType1": 10, "enemyTankType2": 10, "enemyTankType3": 20, "enemyTankType4": 20},
+            "nightmare": {"enemyTankType4": 40, "enemyTankType5": 10}
+        }
+
+        for button in [
+            self.choose_easy_mode_button,
+            self.choose_medium_mode_button,
+            self.choose_hard_mode_button,
+            self.choose_nightmare_mode_button
+        ]:
+            button.changeColor(menu_mouse_pos)
+            button.update(self.screen)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if self.choose_easy_mode_button.checkForInput(menu_mouse_pos):
+                    self.difficulty = difficulties["easy"]
+                    self.state = 'play'
+                elif self.choose_medium_mode_button.checkForInput(menu_mouse_pos):
+                    self.difficulty = difficulties["medium"]
+                    self.state = 'play'
+                elif self.choose_hard_mode_button.checkForInput(menu_mouse_pos):
+                    self.difficulty = difficulties["hard"]
+                    self.state = 'play'
+                elif self.choose_nightmare_mode_button.checkForInput(menu_mouse_pos):
+                    self.difficulty = difficulties["nightmare"]
+                    self.state = 'play'
+
     def play(self):
         if not self.level:
-            self.level = Level()  
+            self.level = Level(self.difficulty)  
         self.level.run()
         
         if self.level.player.health <= 0:
@@ -120,7 +170,7 @@ class Game:
 
                 elif self.state == 'choose':
                     if self.choose_mode_one_player_button.checkForInput(mouse_pos):
-                        self.state = 'play'
+                        self.state = "select_difficulty"
                         self.level = None
                     elif self.choose_mode_multiplayer_button.checkForInput(mouse_pos):
                         print("Multiplayer")
@@ -141,6 +191,8 @@ class Game:
                     self.main_menu()
                 case 'choose':
                     self.play_menu()
+                case 'select_difficulty':
+                    self.select_difficulty_menu()
                 case 'play':
                     self.play()
                 case 'end':

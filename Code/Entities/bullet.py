@@ -1,12 +1,14 @@
 import pygame
 from Code.Utilities.settings import *
+from Code.Entities.Explosion import Explosion
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, entity, tile_sprites, groups, bullet_speed):
+    def __init__(self, entity, tile_sprites, groups, bullet_speed, all_sprites_group=None):
         super().__init__(groups)
 
         self.sprite_type = 'bullet'
         self.origin_type = entity.sprite_type
+        self.all_sprites_group = all_sprites_group
         
         direction = entity.status.split('_')[0]
 
@@ -14,7 +16,6 @@ class Bullet(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (25, 25))
 
         self.rect = self.image.get_rect()
-        self.mask = pygame.mask.from_surface(self.image)
         
         offset = 10
         self.bullet_speed = bullet_speed
@@ -38,9 +39,11 @@ class Bullet(pygame.sprite.Sprite):
         self.speed = self.bullet_speed 
         self.tile_sprites = tile_sprites
 
+    def explode_and_kill(self):
+        if self.all_sprites_group:
+            Explosion(self.rect.center, [self.all_sprites_group])
+        self.kill()
+
     def update(self):
         self.rect.x += self.direction.x * self.speed
         self.rect.y += self.direction.y * self.speed
-
-        if pygame.sprite.spritecollideany(self, self.tile_sprites):
-            self.kill()

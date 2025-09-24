@@ -20,7 +20,7 @@ class Player(Entity):
 
         # Movement
         self.speed = 6
-        self.bullet_speed = 8
+        self.bullet_speed = 6
         self.attacking = False
         self.attack_cooldown = 800
         self.attack_time = None
