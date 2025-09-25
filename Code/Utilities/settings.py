@@ -9,7 +9,7 @@ BAR_HEIGHT = 20
 HEALTH_BAR_WIDTH = 200
 ITEM_BOX_SIZE = 80
 UI_FONT = "Assets/Fonts/joystix.ttf"
-UI_FONTSIZE = 18
+UI_FONTSIZE = 25
 
 # enemy
 tanks_data =  {

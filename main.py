@@ -93,12 +93,12 @@ class Game:
     def select_difficulty_menu(self):
         self.screen.blit(self.bg_image, (0, 0))
         menu_mouse_pos = pygame.mouse.get_pos()
-
-        difficulties = {
-            "easy": {"enemyTankType1": 20, "enemyTankType2": 20, "enemyTankType3": 10, "enemyTankType4": 5},
-            "medium": {"enemyTankType1": 10, "enemyTankType2": 10, "enemyTankType3": 15, "enemyTankType4": 10},
-            "hard": {"enemyTankType1": 10, "enemyTankType2": 10, "enemyTankType3": 20, "enemyTankType4": 20},
-            "nightmare": {"enemyTankType4": 40, "enemyTankType5": 10}
+        
+        difficulties = { 
+            "easy": {"name": "Easy", "enemyTankType1": 20, "enemyTankType2": 20, "enemyTankType3": 10, "enemyTankType4": 5}, 
+            "medium": {"name": "Medium", "enemyTankType1": 10, "enemyTankType2": 10, "enemyTankType3": 15, "enemyTankType4": 10}, 
+            "hard": {"name": "Hard", "enemyTankType1": 10, "enemyTankType2": 10, "enemyTankType3": 20, "enemyTankType4": 20}, 
+            "nightmare": {"name": "Nightmare", "enemyTankType4": 40, "enemyTankType5": 10} 
         }
 
         for button in [

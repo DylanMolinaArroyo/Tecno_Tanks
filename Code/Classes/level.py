@@ -12,6 +12,10 @@ from random import choice
 
 class Level:
     def __init__(self, difficulty_config):
+
+        # Difficulty configuration
+        self.difficulty_config = difficulty_config
+
         # get the display surface 
         self.display_surface = pygame.display.get_surface()
 
@@ -23,6 +27,14 @@ class Level:
         self.bullet_sprites = pygame.sprite.Group()
         self.attackble_sprites = pygame.sprite.Group()
         
+        # --- Wave setup ---
+        self.current_wave = 0
+        self.wave_size = 5  # number of enemies per wave
+        self.current_round = 0 # current round number 
+        self.total_rounds = 0 # total number of rounds
+        self.enemy_queue = []  # list of enemies to spawn
+        self.generate_enemy_queue()
+
         # user interface
         self.ui = UI()
 
@@ -35,7 +47,6 @@ class Level:
         layouts = {
             'boundary': import_csv_layout('Assets/Map_matrix/MapaJuego_Obstaculos.csv'),
             'grass': import_csv_layout('Assets/Map_matrix/MapaJuego_Pasto.csv'),
-            'enemies': import_csv_layout('Assets/Map_matrix/MapaJuego_Enemigos.csv')
         }
         graphics = {
             'grass': import_folder('Assets/Objects/Attackable/grass'),
@@ -44,8 +55,6 @@ class Level:
             'house': pygame.image.load('Assets/Objects/Attackable/house/house.png').convert_alpha()
 
         }
-
-        enemieCoords = layouts['enemies']
 
         self.player = Player((2020, 2700), [self.visible_sprites, self.attackble_sprites], self.obstacle_sprites, self.create_bullet)
 
@@ -71,11 +80,50 @@ class Level:
                             random_grass_image = choice(graphics['grass'])
                             Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'grass', random_grass_image)
        
-        for i in range(20):
+            """        
+            for i in range(20):
             coordenates = get_random_position(enemieCoords)
             self.enemy = Enemy(
                 'enemyTankType2', 
                 (coordenates[0] * TILESIZE, coordenates[1] * TILESIZE),
+                [self.visible_sprites, self.attackble_sprites],
+                self.obstacle_sprites,
+                self.damage_player,
+                self.create_bullet,
+                self.player,
+                self.path_request
+            )
+            """
+
+    def generate_enemy_queue(self):
+        """Crea la lista de enemigos según la dificultad."""
+        self.enemy_queue.clear()
+
+        for enemy_type, amount in self.difficulty_config.items():
+            if enemy_type == "name":
+                continue
+            for _ in range(amount):
+                self.enemy_queue.append(enemy_type)
+    
+        from random import shuffle
+        shuffle(self.enemy_queue)
+        self.total_rounds = len(self.enemy_queue) // self.wave_size + (1 if len(self.enemy_queue) % self.wave_size > 0 else 0)
+
+    def spawn_wave(self):
+        """Spawnea la siguiente tanda de enemigos visibles."""
+        spawn_count = min(self.wave_size, len(self.enemy_queue))
+        layouts = import_csv_layout('Assets/Map_matrix/MapaJuego_Enemigos.csv')
+
+        self.current_round += 1
+
+        for _ in range(spawn_count):
+            if not self.enemy_queue:
+                break
+            enemy_type = self.enemy_queue.pop(0)
+            x, y = get_random_position(layouts)
+            self.enemy =  Enemy(
+                enemy_type,
+                (x * TILESIZE, y * TILESIZE),
                 [self.visible_sprites, self.attackble_sprites],
                 self.obstacle_sprites,
                 self.damage_player,
@@ -131,9 +179,14 @@ class Level:
         self.player_attack_logic()
         self.bullet_sprites.update()
 
+        # If no enemies are present, spawn next wave
+        enemy_sprites = [sprite for sprite in self.visible_sprites if getattr(sprite, 'sprite_type', None) == 'enemy']
+        if not enemy_sprites and self.enemy_queue:
+            self.spawn_wave()
+
         # 2 - Draw everything
         self.visible_sprites.custom_draw(self.player)
-        self.ui.display(self.player)
+        self.ui.display(self.player, self.difficulty_config["name"], self.total_rounds, self.current_round)
 
 
 class YSortCameraGroup(pygame.sprite.Group):
@@ -195,7 +248,24 @@ class YSortCameraGroup(pygame.sprite.Group):
             scaled_sprite = pygame.transform.scale(sprite.image, (screen_w_s, screen_h_s))
 
             self.display_surface.blit(scaled_sprite, (screen_x, screen_y))
-        
+
+            if hasattr(sprite, 'health') and hasattr(sprite, 'enemy_name'):
+                # Health ratio
+                health_ratio = max(sprite.health, 0) / tanks_data[sprite.enemy_name]['health']
+
+                # Bar size and position
+                bar_width = int(sprite.rect.width * self.zoom_factor)
+                bar_height = max(int(10 * self.zoom_factor), 2)
+                bar_x = screen_x
+                bar_y = screen_y - int(20 * self.zoom_factor)
+
+                background_rect = pygame.Rect(bar_x, bar_y, bar_width, bar_height)
+                health_rect = pygame.Rect(bar_x, bar_y, int(bar_width * health_ratio), bar_height)
+
+                pygame.draw.rect(self.display_surface, (255, 0, 0), background_rect)
+                pygame.draw.rect(self.display_surface, (0, 255, 0), health_rect)
+                pygame.draw.rect(self.display_surface, (0, 0, 0), background_rect, 2)
+
     def enemy_update(self, player):
         enemy_sprites = [sprite for sprite in self.sprites() if hasattr(sprite,'sprite_type') and sprite.sprite_type == 'enemy']
         for enemy in enemy_sprites:

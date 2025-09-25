@@ -93,7 +93,7 @@ class Enemy(Entity):
         self.path = self.path_request.solicitar_ruta(player_pos, enemy_pos)
 
     def get_status(self, player):
-        if not self.state_locked:  # Solo permite cambiar de estado si no está bloqueado
+        if not self.state_locked:
             distance, direction = self.get_player_distance_direction(player)
 
             # Attack
