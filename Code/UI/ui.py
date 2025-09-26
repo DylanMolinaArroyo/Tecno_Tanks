@@ -71,7 +71,7 @@ class UI:
         self.display_surface.blit(text_surf, (x, y))
 
     def show_rounds(self, total_rounds, current_round):
-        round_text = f"Round {current_round} / {total_rounds}"  
+        round_text = f"Wave {current_round} / {total_rounds}"  
         text_surf = self.font.render(round_text, True, (255, 255, 255))
         
         # render of the border
@@ -83,6 +83,27 @@ class UI:
             self.display_surface.blit(border_surf, (x + ox, y + oy))
         
         self.display_surface.blit(text_surf, (x, y))
+
+    def show_next_wave_timer(self, duration=5):
+        elapsed_time_ms = pygame.time.get_ticks() - self.start_time
+        elapsed_seconds = elapsed_time_ms // 1000
+
+        remaining = max(0, duration - elapsed_seconds)
+        wave_text = f"Next wave in: {remaining}"
+
+        border_surf = self.font.render(wave_text, True, (0, 0, 0))
+        text_surf = self.font.render(wave_text, True, (255, 255, 255))
+
+        x, y = (self.display_surface.get_width() // 2 - text_surf.get_width() // 2, 250)
+
+        offsets = [(-2,0),(2,0),(0,-2),(0,2), (-2,-2), (-2,2), (2,-2), (2,2)]
+        for ox, oy in offsets:
+            self.display_surface.blit(border_surf, (x + ox, y + oy))
+
+        self.display_surface.blit(text_surf, (x, y))
+
+        return remaining == 0
+
 
     def display(self, player, difficulty_name, total_rounds, current_round):
         self.show_health(player.health, player.stats['health'])

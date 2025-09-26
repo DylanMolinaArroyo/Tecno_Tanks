@@ -62,6 +62,7 @@ class Enemy(Entity):
             'hit_sound': pygame.mixer.Sound('Assets/Audio/hit.wav'),
             'death_sound': pygame.mixer.Sound('Assets/Audio/death.wav')
         }
+
         self.sounds['attack_sound'].set_volume(0.4)
         self.sounds['hit_sound'].set_volume(0.4)
         self.sounds['death_sound'].set_volume(0.4)
@@ -245,7 +246,6 @@ class Enemy(Entity):
         if self.health <= 0:
             self.sounds['death_sound'].play()
             self.kill()
-
 
     def update(self):
         distance_to_player, _ = self.get_player_distance_direction(self.player)

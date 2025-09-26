@@ -1,8 +1,10 @@
 import pygame
 
 from Code.Classes import path_request
+from Code.Classes.estructure_tile import Estructure_tile
 from Code.Entities.enemy import Enemy
 from Code.Entities.bullet import Bullet
+from Code.UI import ui
 from Code.Utilities.settings import *
 from Code.Functions.support import get_random_position, import_csv_layout, import_folder
 from Code.Classes.tile import Tile
@@ -34,6 +36,8 @@ class Level:
         self.total_rounds = 0 # total number of rounds
         self.enemy_queue = []  # list of enemies to spawn
         self.generate_enemy_queue()
+        self.wave_started = False  
+        self.waiting_next_wave = False
 
         # user interface
         self.ui = UI()
@@ -72,28 +76,13 @@ class Level:
                                 case "1":
                                     Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'rocks', graphics['rock'])
                                 case "3":
-                                    Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'walls', graphics['wall'],)
+                                    Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'walls', graphics['wall'])
                                 case "5":
-                                    Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'house', graphics['house'], hitbox_top=60)
+                                    Estructure_tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'fortress', graphics['house'], hitbox_top=60, player=self.player, estructure_name='fortress')
                                     
                         if style == 'grass':
                             random_grass_image = choice(graphics['grass'])
                             Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'grass', random_grass_image)
-       
-            """        
-            for i in range(20):
-            coordenates = get_random_position(enemieCoords)
-            self.enemy = Enemy(
-                'enemyTankType2', 
-                (coordenates[0] * TILESIZE, coordenates[1] * TILESIZE),
-                [self.visible_sprites, self.attackble_sprites],
-                self.obstacle_sprites,
-                self.damage_player,
-                self.create_bullet,
-                self.player,
-                self.path_request
-            )
-            """
 
     def generate_enemy_queue(self):
         """Crea la lista de enemigos según la dificultad."""
@@ -179,15 +168,25 @@ class Level:
         self.player_attack_logic()
         self.bullet_sprites.update()
 
-        # If no enemies are present, spawn next wave
-        enemy_sprites = [sprite for sprite in self.visible_sprites if getattr(sprite, 'sprite_type', None) == 'enemy']
-        if not enemy_sprites and self.enemy_queue:
-            self.spawn_wave()
-
         # 2 - Draw everything
         self.visible_sprites.custom_draw(self.player)
         self.ui.display(self.player, self.difficulty_config["name"], self.total_rounds, self.current_round)
 
+        enemy_sprites = [sprite for sprite in self.visible_sprites if getattr(sprite, 'sprite_type', None) == 'enemy']
+
+        if not enemy_sprites and self.enemy_queue:
+            if not self.wave_started:
+                self.spawn_wave()
+                self.wave_started = True  
+            else:
+                if not self.waiting_next_wave:
+                    self.ui.start_time = pygame.time.get_ticks()
+                    self.waiting_next_wave = True
+
+                finished = self.ui.show_next_wave_timer()
+                if finished:
+                    self.spawn_wave()
+                    self.waiting_next_wave = False
 
 class YSortCameraGroup(pygame.sprite.Group):
     def __init__(self):
