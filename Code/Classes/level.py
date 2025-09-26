@@ -78,7 +78,8 @@ class Level:
                                 case "3":
                                     Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'walls', graphics['wall'])
                                 case "5":
-                                    Estructure_tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'fortress', graphics['house'], hitbox_top=60, player=self.player, estructure_name='fortress')
+                                    #Estructure_tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'fortress', graphics['house'], hitbox_top=60, player=self.player, estructure_name='fortress')
+                                    Estructure_tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'fortress', graphics['house'], hitbox_top=60, estructure_name='fortress')
                                     
                         if style == 'grass':
                             random_grass_image = choice(graphics['grass'])
