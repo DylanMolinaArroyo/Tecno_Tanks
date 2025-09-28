@@ -1,7 +1,7 @@
 import pygame
 
 from Code.Classes import path_request
-from Code.Classes.estructure_tile import Estructure_tile
+from Code.Classes.structure_tile import Structure_tile
 from Code.Entities.enemy import Enemy
 from Code.Entities.bullet import Bullet
 from Code.UI import ui
@@ -55,7 +55,7 @@ class Level:
         graphics = {
             'grass': import_folder('Assets/Objects/Attackable/grass'),
             'rock': pygame.image.load('Assets/Objects/Unbreakable/rock.png').convert_alpha(),
-            'wall': pygame.image.load('Assets/Objects/Attackable/Wall/Wall64.png').convert_alpha(),
+            'wall': pygame.image.load('Assets/Objects/Attackable/Wall/Wall.png').convert_alpha(),
             'house': pygame.image.load('Assets/Objects/Attackable/house/house.png').convert_alpha()
 
         }
@@ -78,7 +78,7 @@ class Level:
                                 case "3":
                                     Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'walls', graphics['wall'])
                                 case "5":
-                                    Estructure_tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'fortress', graphics['house'], hitbox_top=60, player=self.player, estructure_name='fortress')
+                                    self.structure = Structure_tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'fortress', graphics['house'], hitbox_top=60, player=self.player)
                                     
                         if style == 'grass':
                             random_grass_image = choice(graphics['grass'])
@@ -118,7 +118,8 @@ class Level:
                 self.damage_player,
                 self.create_bullet,
                 self.player,
-                self.path_request
+                self.structure,
+                path_request=self.path_request
             )
 
     def create_bullet(self, origin, bullet_speed):
@@ -149,6 +150,10 @@ class Level:
                         elif target_sprite.sprite_type == 'rocks' and bullet_sprite.origin_type == 'player' or bullet_sprite.origin_type == 'enemy':
                             bullet_sprite.explode_and_kill()
 
+                        elif target_sprite.sprite_type == 'structure' and bullet_sprite.origin_type == 'player' or bullet_sprite.origin_type == 'enemy':
+                            target_sprite.get_damage(self.player, bullet_sprite.sprite_type)
+                            bullet_sprite.explode_and_kill()
+
     
     def damage_player(self,amount):
         if self.player.vulnerable:
@@ -165,6 +170,7 @@ class Level:
         # 1 - Logic and sprites
         self.visible_sprites.update()
         self.visible_sprites.enemy_update(self.player)
+        self.visible_sprites.structure_update()
         self.player_attack_logic()
         self.bullet_sprites.update()
 
@@ -248,9 +254,13 @@ class YSortCameraGroup(pygame.sprite.Group):
 
             self.display_surface.blit(scaled_sprite, (screen_x, screen_y))
 
-            if hasattr(sprite, 'health') and hasattr(sprite, 'enemy_name'):
+            if sprite.sprite_type == 'enemy' or sprite.sprite_type == 'structure':
                 # Health ratio
-                health_ratio = max(sprite.health, 0) / tanks_data[sprite.enemy_name]['health']
+                match sprite.sprite_type:
+                    case 'enemy':
+                        health_ratio = max(sprite.health, 0) / tanks_data[sprite.name]['health']
+                    case 'structure':
+                        health_ratio = max(sprite.health, 0) / estructure_data[sprite.name]['health']
 
                 # Bar size and position
                 bar_width = int(sprite.rect.width * self.zoom_factor)
@@ -269,3 +279,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         enemy_sprites = [sprite for sprite in self.sprites() if hasattr(sprite,'sprite_type') and sprite.sprite_type == 'enemy']
         for enemy in enemy_sprites:
             enemy.enemy_update(player)
+
+    def structure_update(self):
+        estructure_sprites = [sprite for sprite in self.sprites() if hasattr(sprite,'sprite_type') and sprite.sprite_type == 'structure']
+        for estructure in estructure_sprites:
+            estructure.structure_update()

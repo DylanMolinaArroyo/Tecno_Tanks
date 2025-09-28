@@ -13,11 +13,11 @@ UI_FONTSIZE = 25
 
 # enemy
 tanks_data =  {
-   'enemyTankType1':{'health': 2, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 4, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 500},
-   'enemyTankType2':{'health': 3, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 6, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 500},
-   'enemyTankType3':{'health': 4, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 6, 'bullet_speed': 6, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 500},
-   'enemyTankType4':{'health': 5, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 4, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 500},
-   'enemyTankType5':{'health': 10, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 6, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 500}
+   'enemyTankType1':{'health': 2, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 4, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 1500},
+   'enemyTankType2':{'health': 3, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 6, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 1500},
+   'enemyTankType3':{'health': 4, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 6, 'bullet_speed': 6, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 1500},
+   'enemyTankType4':{'health': 5, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 4, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 1500},
+   'enemyTankType5':{'health': 10, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 6, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 1500}
 }
 
 """
@@ -31,6 +31,10 @@ o Definitivo: lento, disparo rápido, 100 HP, requiere daño combinado
 power_up_data =  {
    'shield':{'duration_time': 10, 'effect': 0,'sound':'Assets/Audio/attack/slash.wav'},
    'shoot_upgrade':{'duration_time': 3, 'effect': 2,'sound':'Assets/Audio/attack/slash.wav'},
-   'ship_icon':{'duration_time': 30, 'effect': False,'sound':'Assets/Audio/attack/slash.wav'},
    'clock':{'duration_time': 10, 'effect': 10,'sound':'Assets/Audio/attack/slash.wav'},
+}
+
+estructure_data =  {
+   'wall':{'health': 10, 'sound':'Assets/Audio/attack/slash.wav'},
+   'fortress':{'health': 3, 'sound':'Assets/Audio/attack/slash.wav'},
 }

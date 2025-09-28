@@ -4,6 +4,7 @@ import os
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, pos, groups, folder_path="Assets/Effects/Circle_explosion"):
         super().__init__(groups)
+        self.sprite_type = 'explosion'
 
         self.frames = []
         for filename in sorted(os.listdir(folder_path)):

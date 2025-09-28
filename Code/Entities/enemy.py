@@ -5,12 +5,13 @@ from Code.Entities.entity import Entity
 from Code.Functions.support import import_folder
 
 class Enemy(Entity):
-    def __init__(self, enemy_name, pos, groups, obstacle_sprites, damage_player, create_bullet, player, path_request):
+    def __init__(self, enemy_name, pos, groups, obstacle_sprites, damage_player, create_bullet, player, structure, path_request):
         super().__init__(groups)
 
         self.sprite_type = 'enemy'
 
         self.player = player
+        self.structure_pos = structure.get_grid_position()
 
         # graphics setup
         self.import_graphics(enemy_name)
@@ -23,8 +24,8 @@ class Enemy(Entity):
         self.obstacle_sprites = obstacle_sprites
 
         # stats
-        self.enemy_name = enemy_name
-        enemy_info = tanks_data[self.enemy_name]
+        self.name = enemy_name
+        enemy_info = tanks_data[self.name]
         self.health = enemy_info['health']
         self.speed = enemy_info['speed']
         self.bullet_speed = enemy_info['bullet_speed']
@@ -55,6 +56,11 @@ class Enemy(Entity):
         self.state_locked = False  # Bloquea el cambio de estado tras el ataque
         self.state_lock_time = None  # Marca el tiempo de bloqueo
         self.state_lock_duration = 500  # Duración del bloqueo en milisegundos
+
+        # cache de pathfinding
+        self.last_target = None
+        self.last_path_time = 0
+        self.path_refresh_rate = 400  # ms entre recalcular rutas
 
         # Sounds
         self.sounds = {
@@ -92,6 +98,16 @@ class Enemy(Entity):
     
     def get_path(self, player_pos, enemy_pos):
         self.path = self.path_request.solicitar_ruta(player_pos, enemy_pos)
+
+    def request_path(self, target_pos, enemy_pos):
+        """Solicita una nueva ruta si cambió el target o pasó el tiempo mínimo."""
+        current_time = pygame.time.get_ticks()
+        if (self.last_target != target_pos or
+            current_time - self.last_path_time >= self.path_refresh_rate):
+            
+            self.get_path(target_pos, enemy_pos)
+            self.last_target = target_pos
+            self.last_path_time = current_time
 
     def get_status(self, player):
         if not self.state_locked:
@@ -249,17 +265,24 @@ class Enemy(Entity):
 
     def update(self):
         distance_to_player, _ = self.get_player_distance_direction(self.player)
-        if distance_to_player <= self.notice_radius:
-            if not self.path:
-                playerPos = self.player.get_grid_position()
-                enemyPos = self.get_grid_position()
-                self.get_path(playerPos, enemyPos)
+        enemyPos = self.get_grid_position()
 
-            self.enemy_move(self.speed)
-        
+        if distance_to_player <= self.notice_radius:
+            # ir hacia el jugador
+            playerPos = self.player.get_grid_position()
+            self.request_path(playerPos, enemyPos)
+        else:
+            # ir hacia la estructura
+            self.request_path(self.structure_pos, enemyPos)
+
+        # mover en base al path ya calculado
+        self.enemy_move(self.speed)
+
+        # resto de lógica
         self.hit_reaction()
         self.animate()
         self.cooldowns()
+
 
 
     def enemy_update(self, player):
