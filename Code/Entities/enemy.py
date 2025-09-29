@@ -259,7 +259,7 @@ class Enemy(Entity):
             self.status = self.status.split('_')[0] + '_idle'
 
     def check_death(self):
-        if self.health <= 0:
+        if self.health <= 0 or self.player.kaboom:
             self.sounds['death_sound'].play()
             self.kill()
 
@@ -282,8 +282,6 @@ class Enemy(Entity):
         self.hit_reaction()
         self.animate()
         self.cooldowns()
-
-
 
     def enemy_update(self, player):
         self.get_status(player)

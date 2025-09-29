@@ -13,12 +13,12 @@ def import_csv_layout(path):
     
 import random
 
-def get_random_position(matrix):
+def get_random_position(matrix, index: str ):
     posiciones_internas = []
 
     for y in range(1, len(matrix) - 1):
         for x in range(1, len(matrix[y]) - 1):
-            if matrix[y][x] == '4':
+            if matrix[y][x] == index:
                 posiciones_internas.append((x, y))
 
     if posiciones_internas:

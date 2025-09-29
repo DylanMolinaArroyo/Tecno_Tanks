@@ -29,9 +29,16 @@ o Definitivo: lento, disparo rápido, 100 HP, requiere daño combinado
 """
 
 power_up_data =  {
-   'shield':{'duration_time': 10, 'effect': 0,'sound':'Assets/Audio/attack/slash.wav'},
-   'shoot_upgrade':{'duration_time': 3, 'effect': 2,'sound':'Assets/Audio/attack/slash.wav'},
-   'clock':{'duration_time': 10, 'effect': 10,'sound':'Assets/Audio/attack/slash.wav'},
+   'shield':{'duration_time': 30, 'effect': 0, 'sound':'Assets/Audio/Fire.wav'},
+   'shoot_upgrade':{'duration_time': 20, 'effect': 2, 'sound':'Assets/Audio/Fire.wav'},
+   'clock':{'duration_time': 10, 'effect': 10, 'sound':'Assets/Audio/Fire.wav'},
+}
+
+bonus_data =  {
+   'wrench':{'sound':'Assets/Audio/Fire.wav'},
+   'machine_gun':{'duration_time': 20, 'sound':'Assets/Audio/Fire.wav'},
+   'fortress_shield':{'duration_time': 10, 'sound':'Assets/Audio/Fire.wav'},
+   'bomb':{'sound':'Assets/Audio/Fire.wav'}
 }
 
 estructure_data =  {

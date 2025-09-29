@@ -3,10 +3,10 @@ from Code.Utilities.settings import *
 from Code.UI.button import Button
 from Code.Classes.level import Level
 
-class Game:
+class Game: 
     def __init__(self):
         pygame.init()
-        
+         
         self.screen = pygame.display.set_mode((WIDTH, HEIGTH))
         pygame.display.set_caption('TecnoTanks')
         self.clock = pygame.time.Clock()

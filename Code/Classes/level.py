@@ -1,3 +1,4 @@
+import random
 import pygame
 
 from Code.Classes import path_request
@@ -10,6 +11,7 @@ from Code.Functions.support import get_random_position, import_csv_layout, impor
 from Code.Classes.tile import Tile
 from Code.Entities.player import Player
 from Code.UI.ui import UI
+from Code.Entities.powerUp import PowerUp
 from random import choice
 
 class Level:
@@ -24,12 +26,13 @@ class Level:
         # sprite group setup
         self.visible_sprites = YSortCameraGroup()
         self.obstacle_sprites = pygame.sprite.Group()
+        self.power_up_sprites = pygame.sprite.Group()
 
         # attack sprites
         self.bullet_sprites = pygame.sprite.Group()
         self.attackble_sprites = pygame.sprite.Group()
         
-        # --- Wave setup ---
+        # Wave setup
         self.current_wave = 0
         self.wave_size = 5  # number of enemies per wave
         self.current_round = 0 # current round number 
@@ -38,6 +41,14 @@ class Level:
         self.generate_enemy_queue()
         self.wave_started = False  
         self.waiting_next_wave = False
+
+        # Power uo setup
+        self.last_power_up_time = pygame.time.get_ticks()
+        self.power_up_interval = 60 * 1000  # 1 minute in ms
+
+        # Bonuses setup
+        self.last_bonues_time = pygame.time.get_ticks()
+        self.bonus_interval = 5 * 1000  # 2 minutes in ms
 
         # user interface
         self.ui = UI()
@@ -99,7 +110,6 @@ class Level:
         self.total_rounds = len(self.enemy_queue) // self.wave_size + (1 if len(self.enemy_queue) % self.wave_size > 0 else 0)
 
     def spawn_wave(self):
-        """Spawnea la siguiente tanda de enemigos visibles."""
         spawn_count = min(self.wave_size, len(self.enemy_queue))
         layouts = import_csv_layout('Assets/Map_matrix/MapaJuego_Enemigos.csv')
 
@@ -109,7 +119,7 @@ class Level:
             if not self.enemy_queue:
                 break
             enemy_type = self.enemy_queue.pop(0)
-            x, y = get_random_position(layouts)
+            x, y = get_random_position(layouts, '4')
             self.enemy =  Enemy(
                 enemy_type,
                 (x * TILESIZE, y * TILESIZE),
@@ -154,7 +164,22 @@ class Level:
                             target_sprite.get_damage(self.player, bullet_sprite.sprite_type)
                             bullet_sprite.explode_and_kill()
 
-    
+    def spawn_power_up(self):
+        layouts = import_csv_layout('Assets/Map_matrix/MapaJuego_Objetos.csv')
+        x, y = get_random_position(layouts, '6')
+        power_type = choice(list(power_up_data.keys()))
+        PowerUp(power_type, (x * TILESIZE, y * TILESIZE), 
+                [self.visible_sprites, self.power_up_sprites], 
+                power_up_data[power_type])
+        
+    def spawn_bonus(self):
+        layouts = import_csv_layout('Assets/Map_matrix/MapaJuego_Objetos.csv')
+        x, y = get_random_position(layouts, '6')
+        bonus_type = choice(list(bonus_data.keys()))
+        PowerUp(bonus_type, (x * TILESIZE, y * TILESIZE), 
+                [self.visible_sprites, self.power_up_sprites], 
+                bonus_data[bonus_type])
+
     def damage_player(self,amount):
         if self.player.vulnerable:
             self.player.health -+ amount
@@ -174,6 +199,27 @@ class Level:
         self.player_attack_logic()
         self.bullet_sprites.update()
 
+        current_time = pygame.time.get_ticks()
+        
+        # --- PowerUps logic ---
+        if current_time - self.last_power_up_time >= self.power_up_interval:
+            self.spawn_power_up()
+            self.last_power_up_time = current_time
+
+        # --- Bonus logic ---
+        if current_time - self.last_bonues_time >= self.bonus_interval:
+            randomNum = random.random()
+            print(randomNum)
+            if randomNum < 0.5:
+                self.spawn_bonus()
+            self.last_bonues_time = current_time
+
+        # Detectar colisión jugador con powerups
+        for power in self.power_up_sprites:
+            if self.player.rect.colliderect(power.hitbox):
+                power.apply_effect(self.player)
+
+
         # 2 - Draw everything
         self.visible_sprites.custom_draw(self.player)
         self.ui.display(self.player, self.difficulty_config["name"], self.total_rounds, self.current_round)
@@ -182,6 +228,7 @@ class Level:
 
         if not enemy_sprites and self.enemy_queue:
             if not self.wave_started:
+                self.player.kaboom = False
                 self.spawn_wave()
                 self.wave_started = True  
             else:
@@ -208,6 +255,14 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         # Zoom camera
         self.zoom_factor = 0.7  # Zoom out 
+
+    def spawn_power_up(self):
+        layouts = import_csv_layout('Assets/Map_matrix/MapaJuego_Objetos.csv')
+        x, y = get_random_position(layouts)
+        power_type = choice(list(power_up_data.keys()))
+        PowerUp(power_type, (x * TILESIZE, y * TILESIZE), 
+                [self.visible_sprites, self.power_up_sprites], 
+                power_up_data[power_type])
 
     def custom_draw(self, player):
         screen_w, screen_h = self.display_surface.get_size()
