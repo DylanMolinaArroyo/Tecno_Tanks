@@ -59,8 +59,7 @@ class Player(Entity):
         self.slow_motion_end = 0
         self.machine_gun_active = False
         self.machine_gun_end = 0
-
-        self.kaboom = False
+        self.bomb_active = False
 
 
         # Sounds
@@ -136,7 +135,7 @@ class Player(Entity):
         base_image = animation[int(self.frame_index)].copy()
         self.rect = base_image.get_rect(center=self.hitbox.center)
 
-        # Daño extra → rojo
+        # Damage shoot boost → rojo
         if self.shoot_upgrade_active:
             base_image.fill((255, 0, 0), special_flags=pygame.BLEND_RGB_ADD)
         
@@ -199,10 +198,14 @@ class Player(Entity):
         if self.slow_motion_active and current_time > self.slow_motion_end:
             self.slow_motion_active = False
 
-                # slow motion
+        # machine_gun
         if self.machine_gun_active and current_time > self.machine_gun_end:
             self.attack_cooldown = 800
             self.machine_gun_active = False
+
+        # bomb
+        if self.bomb_active and current_time > self.bomb_end: 
+            self.bomb_active = False
 
     def activate_shield(self, duration):
         self.shield_active = True
@@ -225,8 +228,9 @@ class Player(Entity):
         if self.health < self.stats["health"]:
             self.health += 1
 
-    def bomb_everyone(self):
-        self.kaboom = True
+    def bomb_everyone(self, duration):
+        self.bomb_active = True
+        self.bomb_end = pygame.time.get_ticks() + duration * 1000
 
     def fortress_shield (self, duration):
         pass

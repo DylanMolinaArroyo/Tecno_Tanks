@@ -28,7 +28,7 @@ class PowerUp(pygame.sprite.Sprite):
             case 'fortresss_shield':
                 player.fortress_shield(self.data["duration_time"])
             case 'bomb':
-                player.bomb_everyone()
+                player.bomb_everyone(self.data["duration_time"])
         
         # sonido del power up
         if "sound" in self.data:

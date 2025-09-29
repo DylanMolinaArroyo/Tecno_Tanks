@@ -25,19 +25,19 @@ class Enemy(Entity):
 
         # stats
         self.name = enemy_name
-        enemy_info = tanks_data[self.name]
-        self.health = enemy_info['health']
-        self.speed = enemy_info['speed']
-        self.bullet_speed = enemy_info['bullet_speed']
-        self.attack_damage = enemy_info['damage']
-        self.resistance = enemy_info['resistance']
-        self.attack_radius = enemy_info['attack_radius']
-        self.notice_radius = enemy_info['notice_radius']
+        self.enemy_info = tanks_data[self.name]
+        self.health = self.enemy_info['health']
+        self.resistance = self.enemy_info['resistance']
+        self.speed = self.enemy_info['speed']
+        self.bullet_speed = self.enemy_info['bullet_speed']
+        self.attack_damage = self.enemy_info['damage']
+        self.attack_radius = self.enemy_info['attack_radius']
+        self.notice_radius = self.enemy_info['notice_radius']
+        self.attack_cooldown = self.enemy_info['attack_cooldown']
 
         # player interaction
         self.can_attack = True
         self.attack_time = None
-        self.attack_cooldown = 1300
         self.damage_player = damage_player
 
         # invincibility timer
@@ -56,6 +56,11 @@ class Enemy(Entity):
         self.state_locked = False  # Bloquea el cambio de estado tras el ataque
         self.state_lock_time = None  # Marca el tiempo de bloqueo
         self.state_lock_duration = 500  # Duración del bloqueo en milisegundos
+
+        # slow motion state control
+        self.slow_motion_applied = False
+        self.clock_image = pygame.image.load("Assets/Effects/Clock/Clock_effect.png").convert_alpha()
+
 
         # cache de pathfinding
         self.last_target = None
@@ -176,14 +181,21 @@ class Enemy(Entity):
                 self.can_attack = False
             self.frame_index = 0
 
-        self.image = animation[int(self.frame_index)]
-        self.rect = self.image.get_rect(center=self.hitbox.center)
+        base_image = animation[int(self.frame_index)].copy()
+        self.rect = base_image.get_rect(center=self.hitbox.center)
+
+        if self.slow_motion_applied:
+            closk_scaled = pygame.transform.scale(self.clock_image, base_image.get_size())
+            base_image.blit(closk_scaled, (0, 0))
 
         if not self.vulnerable:
             alpha = self.wave_value()
-            self.image.set_alpha(alpha) 
+            base_image.set_alpha(alpha) 
         else:
-            self.image.set_alpha(255)
+            base_image.set_alpha(255)
+
+        self.image = base_image 
+
 
     def cooldowns(self):
         current_time = pygame.time.get_ticks()
@@ -259,26 +271,37 @@ class Enemy(Entity):
             self.status = self.status.split('_')[0] + '_idle'
 
     def check_death(self):
-        if self.health <= 0 or self.player.kaboom:
+        if self.health <= 0 or self.player.bomb_active:
             self.sounds['death_sound'].play()
             self.kill()
+
+    def apply_slow_motion(self):
+        self.speed = 1
+        self.attack_cooldown = self.enemy_info['attack_cooldown'] * 2
+        self.slow_motion_applied = True
+
+    def remove_slow_motion(self):
+        self.speed = self.enemy_info['speed']
+        self.attack_cooldown = self.enemy_info['attack_cooldown']
+        self.slow_motion_applied = False
 
     def update(self):
         distance_to_player, _ = self.get_player_distance_direction(self.player)
         enemyPos = self.get_grid_position()
 
         if distance_to_player <= self.notice_radius:
-            # ir hacia el jugador
             playerPos = self.player.get_grid_position()
             self.request_path(playerPos, enemyPos)
         else:
-            # ir hacia la estructura
             self.request_path(self.structure_pos, enemyPos)
 
-        # mover en base al path ya calculado
+        if self.player.slow_motion_active and not self.slow_motion_applied:
+            self.apply_slow_motion()
+        elif not self.player.slow_motion_active and self.slow_motion_applied:
+            self.remove_slow_motion()
+        
         self.enemy_move(self.speed)
 
-        # resto de lógica
         self.hit_reaction()
         self.animate()
         self.cooldowns()

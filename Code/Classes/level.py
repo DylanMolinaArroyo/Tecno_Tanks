@@ -44,11 +44,11 @@ class Level:
 
         # Power uo setup
         self.last_power_up_time = pygame.time.get_ticks()
-        self.power_up_interval = 60 * 1000  # 1 minute in ms
+        self.power_up_interval = 5 * 1000  # 1 minute in ms
 
         # Bonuses setup
         self.last_bonues_time = pygame.time.get_ticks()
-        self.bonus_interval = 5 * 1000  # 2 minutes in ms
+        self.bonus_interval = 10 * 1000  # 2 minutes in ms
 
         # user interface
         self.ui = UI()
@@ -209,7 +209,6 @@ class Level:
         # --- Bonus logic ---
         if current_time - self.last_bonues_time >= self.bonus_interval:
             randomNum = random.random()
-            print(randomNum)
             if randomNum < 0.5:
                 self.spawn_bonus()
             self.last_bonues_time = current_time

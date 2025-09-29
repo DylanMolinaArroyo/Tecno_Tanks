@@ -13,11 +13,11 @@ UI_FONTSIZE = 25
 
 # enemy
 tanks_data =  {
-   'enemyTankType1':{'health': 2, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 4, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 1500},
-   'enemyTankType2':{'health': 3, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 6, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 1500},
-   'enemyTankType3':{'health': 4, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 6, 'bullet_speed': 6, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 1500},
-   'enemyTankType4':{'health': 5, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 4, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 1500},
-   'enemyTankType5':{'health': 10, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 6, 'resistance': 3, 'attack_radius': 400, 'notice_radius': 1500}
+   'enemyTankType1':{'health': 2, 'resistance': 3, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 4, 'attack_cooldown': 1300, 'attack_radius': 400, 'notice_radius': 600},
+   'enemyTankType2':{'health': 3, 'resistance': 3, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 6, 'attack_cooldown': 1300, 'attack_radius': 400, 'notice_radius': 600},
+   'enemyTankType3':{'health': 4, 'resistance': 3, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 6, 'bullet_speed': 6, 'attack_cooldown': 1300, 'attack_radius': 400, 'notice_radius': 600},
+   'enemyTankType4':{'health': 5, 'resistance': 3, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 4, 'attack_cooldown': 1300, 'attack_radius': 400, 'notice_radius': 600},
+   'enemyTankType5':{'health': 10, 'resistance': 3, 'damage':1,'attack_sound':'Assets/Audio/attack/slash.wav', 'speed': 3, 'bullet_speed': 6, 'attack_cooldown': 1300, 'attack_radius': 400, 'notice_radius': 600}
 }
 
 """
@@ -38,7 +38,7 @@ bonus_data =  {
    'wrench':{'sound':'Assets/Audio/Fire.wav'},
    'machine_gun':{'duration_time': 20, 'sound':'Assets/Audio/Fire.wav'},
    'fortress_shield':{'duration_time': 10, 'sound':'Assets/Audio/Fire.wav'},
-   'bomb':{'sound':'Assets/Audio/Fire.wav'}
+   'bomb':{'duration_time': 1,'sound':'Assets/Audio/Fire.wav'}
 }
 
 estructure_data =  {
