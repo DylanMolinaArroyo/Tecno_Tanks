@@ -25,6 +25,8 @@ class Structure_tile(Tile):
         self.health = estructure_info['health']
         self.sound_path = estructure_info['sound']
 
+        self.destroyed = False
+
     def get_grid_position(self):
         grid_x = self.rect.centerx // TILESIZE
         grid_y = self.rect.centery // TILESIZE
@@ -37,6 +39,7 @@ class Structure_tile(Tile):
     def check_death(self):
         if self.health <= 0:
             self.kill()
+            self.destroyed = True
     
     def structure_update(self):
         self.check_death()

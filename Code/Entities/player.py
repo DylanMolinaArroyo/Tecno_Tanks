@@ -52,15 +52,22 @@ class Player(Entity):
         self.slow_motion_duration = 0
         self.weapon_upgrade_duration = 0 
         self.machine_gun_duration = 0
+        self.fortress_shield_duration = 0
 
         self.shoot_upgrade_active = False
         self.shoot_upgrade_end = 0
+
         self.slow_motion_active = False
         self.slow_motion_end = 0
+
         self.machine_gun_active = False
         self.machine_gun_end = 0
-        self.bomb_active = False
 
+        self.bomb_active = False
+        self.bomb_end = 0
+
+        self.fortress_shield_active = False
+        self.fortress_shield_end = 0
 
         # Sounds
         self.sounds = {
@@ -207,6 +214,11 @@ class Player(Entity):
         if self.bomb_active and current_time > self.bomb_end: 
             self.bomb_active = False
 
+        # forstress shield
+        if self.fortress_shield_active and current_time > self.fortress_shield_end:
+            self.fortress_shield_active = False
+            print('Fortress shield deactivated')
+
     def activate_shield(self, duration):
         self.shield_active = True
         self.shield_duration = duration * 1000
@@ -233,8 +245,11 @@ class Player(Entity):
         self.bomb_end = pygame.time.get_ticks() + duration * 1000
 
     def fortress_shield (self, duration):
-        pass
-    
+        self.fortress_shield_active = True
+        self.fortress_shield_duration = duration * 1000
+        self.fortress_shield_end = pygame.time.get_ticks() + duration * 1000
+        print("Fortress shield activated")
+
     def get_machine_gun(self, duration):
         self.attack_cooldown = 200
         self.machine_gun_active = True

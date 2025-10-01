@@ -25,7 +25,7 @@ class PowerUp(pygame.sprite.Sprite):
                 player.get_health()
             case 'machine_gun':
                 player.get_machine_gun(self.data["duration_time"])
-            case 'fortresss_shield':
+            case 'fortress_shield':
                 player.fortress_shield(self.data["duration_time"])
             case 'bomb':
                 player.bomb_everyone(self.data["duration_time"])

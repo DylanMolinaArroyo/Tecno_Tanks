@@ -136,6 +136,7 @@ class Game:
         if self.level.player.health <= 0:
             self.win = False
             self.state = 'end'
+            
         elif self.level.all_enemies_defeated() and not self.level.enemy_queue and not self.level.enemies:
             self.win = True
             self.state = 'end'

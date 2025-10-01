@@ -34,8 +34,8 @@ class UI:
             "shield": pygame.transform.scale(pygame.image.load("Assets/Objects/PowerUps/shield.png"), self.icon_size),
             "weapon": pygame.transform.scale(pygame.image.load("Assets/Objects/PowerUps/shoot_upgrade.png"), self.icon_size),
             "slow": pygame.transform.scale(pygame.image.load("Assets/Objects/PowerUps/clock.png"), self.icon_size),
-            "machine_gun": pygame.transform.scale(pygame.image.load("Assets/Objects/PowerUps/machine_gun.png"), self.icon_size)
-
+            "machine_gun": pygame.transform.scale(pygame.image.load("Assets/Objects/PowerUps/machine_gun.png"), self.icon_size),
+            "fortress_shield": pygame.transform.scale(pygame.image.load("Assets/Objects/PowerUps/fortress_shield.png"), self.icon_size)
         }
         self.powerup_start_y = 250
 
@@ -169,6 +169,12 @@ class UI:
             total = player.machine_gun_duration
             remaining = max(0, (player.machine_gun_end - current_time))
             draw_bar(self.powerup_icons["machine_gun"], remaining, total, x, y)
+
+        # Fortress shield
+        if player.fortress_shield_active:
+            total = player.fortress_shield_duration
+            remaining = max(0, (player.fortress_shield_end - current_time))
+            draw_bar(self.powerup_icons["fortress_shield"], remaining, total, x, y)
             
     def display(self, player, difficulty_name, total_rounds, current_round):
         self.show_health(player.health, player.stats['health'])

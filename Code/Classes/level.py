@@ -50,6 +50,10 @@ class Level:
         self.last_bonues_time = pygame.time.get_ticks()
         self.bonus_interval = 10 * 1000  # 2 minutes in ms
 
+        # Fortress setup
+        self.fortress_destroyed = False
+        self.fortress_shield_applied = False
+
         # user interface
         self.ui = UI()
 
@@ -68,7 +72,6 @@ class Level:
             'rock': pygame.image.load('Assets/Objects/Unbreakable/rock.png').convert_alpha(),
             'wall': pygame.image.load('Assets/Objects/Attackable/Wall/Wall.png').convert_alpha(),
             'house': pygame.image.load('Assets/Objects/Attackable/house/house.png').convert_alpha()
-
         }
 
         self.player = Player((2020, 2700), [self.visible_sprites, self.attackble_sprites], self.obstacle_sprites, self.create_bullet)
@@ -159,6 +162,9 @@ class Level:
 
                         elif target_sprite.sprite_type == 'rocks' and bullet_sprite.origin_type == 'player' or bullet_sprite.origin_type == 'enemy':
                             bullet_sprite.explode_and_kill()
+                        
+                        elif target_sprite.sprite_type == 'barrier' and bullet_sprite.origin_type == 'player' or bullet_sprite.origin_type == 'enemy':
+                            bullet_sprite.explode_and_kill()
 
                         elif target_sprite.sprite_type == 'structure' and bullet_sprite.origin_type == 'player' or bullet_sprite.origin_type == 'enemy':
                             target_sprite.get_damage(self.player, bullet_sprite.sprite_type)
@@ -188,17 +194,16 @@ class Level:
             
     def all_enemies_defeated(self):
         return not any(sprite for sprite in self.visible_sprites if hasattr(sprite, 'sprite_type') and sprite.sprite_type == 'enemy')
-
-    def run(self):
-        # IMPORTANT TO KEEP IN THIS ORDER
-
-        # 1 - Logic and sprites
-        self.visible_sprites.update()
-        self.visible_sprites.enemy_update(self.player)
-        self.visible_sprites.structure_update()
-        self.player_attack_logic()
-        self.bullet_sprites.update()
-
+    
+    def spawn_power_up(self):
+        layouts = import_csv_layout('Assets/Map_matrix/MapaJuego_Objetos.csv')
+        x, y = get_random_position(layouts, '6')
+        power_type = choice(list(power_up_data.keys()))
+        PowerUp(power_type, (x * TILESIZE, y * TILESIZE), 
+                [self.visible_sprites, self.power_up_sprites], 
+                power_up_data[power_type])
+        
+    def manage_power_ups_and_bonus(self):
         current_time = pygame.time.get_ticks()
         
         # --- PowerUps logic ---
@@ -217,12 +222,8 @@ class Level:
         for power in self.power_up_sprites:
             if self.player.rect.colliderect(power.hitbox):
                 power.apply_effect(self.player)
-
-
-        # 2 - Draw everything
-        self.visible_sprites.custom_draw(self.player)
-        self.ui.display(self.player, self.difficulty_config["name"], self.total_rounds, self.current_round)
-
+        
+    def check_enemies_death(self):
         enemy_sprites = [sprite for sprite in self.visible_sprites if getattr(sprite, 'sprite_type', None) == 'enemy']
 
         if not enemy_sprites and self.enemy_queue:
@@ -240,6 +241,55 @@ class Level:
                     self.spawn_wave()
                     self.waiting_next_wave = False
 
+    def apply_fortress_shield(self):
+        self.fortress_shield_applied = True
+        layout = import_csv_layout('Assets/Map_matrix/MapaJuego_Barrera.csv')
+        barrier_image = pygame.image.load('Assets/Objects/Unbreakable/barrier.png').convert_alpha()
+
+        for row_index, row in enumerate(layout):
+            for col_index, col in enumerate(row):
+                if col != '-1':
+                    x = col_index * TILESIZE
+                    y = row_index * TILESIZE
+
+                    Tile(
+                        (x, y),
+                        [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites],
+                        'barrier',
+                        barrier_image
+                        ,hitbox_bottom=0,hitbox_left=0,hitbox_right=0,hitbox_top=0
+                    )
+
+    def remove_fortress_shield(self):
+        self.fortress_shield_applied = False
+        for sprite in self.obstacle_sprites.sprites():
+            if getattr(sprite, 'sprite_type', None) == 'barrier':
+                sprite.kill()
+
+
+    def run(self):
+        # IMPORTANT TO KEEP IN THIS ORDER
+
+        # 1 - Logic and sprites
+        self.visible_sprites.update()
+        self.visible_sprites.enemy_update(self.player)
+        self.visible_sprites.structure_update()
+        self.player_attack_logic()
+        self.bullet_sprites.update()
+        self.manage_power_ups_and_bonus()
+
+        if self.player.fortress_shield_active and not self.fortress_shield_applied:
+            self.apply_fortress_shield()
+        elif not self.player.fortress_shield_active and self.fortress_shield_applied:
+            self.remove_fortress_shield()
+
+        # 2 - Draw everything
+        self.visible_sprites.custom_draw(self.player)
+        self.ui.display(self.player, self.difficulty_config["name"], self.total_rounds, self.current_round)
+
+        self.check_enemies_death()
+
+
 class YSortCameraGroup(pygame.sprite.Group):
     def __init__(self):
         super().__init__()
@@ -254,14 +304,6 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         # Zoom camera
         self.zoom_factor = 0.7  # Zoom out 
-
-    def spawn_power_up(self):
-        layouts = import_csv_layout('Assets/Map_matrix/MapaJuego_Objetos.csv')
-        x, y = get_random_position(layouts)
-        power_type = choice(list(power_up_data.keys()))
-        PowerUp(power_type, (x * TILESIZE, y * TILESIZE), 
-                [self.visible_sprites, self.power_up_sprites], 
-                power_up_data[power_type])
 
     def custom_draw(self, player):
         screen_w, screen_h = self.display_surface.get_size()
@@ -338,3 +380,6 @@ class YSortCameraGroup(pygame.sprite.Group):
         estructure_sprites = [sprite for sprite in self.sprites() if hasattr(sprite,'sprite_type') and sprite.sprite_type == 'structure']
         for estructure in estructure_sprites:
             estructure.structure_update()
+
+            if estructure.destroyed:
+                self.fortress_destroyed = True
