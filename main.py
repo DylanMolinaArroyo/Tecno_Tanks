@@ -4,7 +4,7 @@ from Code.UI.button import Button
 from Code.Classes.level import Level
 from Code.Network.client import NetworkClient
 
-class Game:
+class Game: 
     def __init__(self):
         pygame.init()
         
@@ -288,6 +288,7 @@ class Game:
         if self.level.player.health <= 0:
             self.win = False
             self.state = 'end'
+            
         elif self.level.all_enemies_defeated() and not self.level.enemy_queue and not self.level.enemies:
             self.win = True
             self.state = 'end'

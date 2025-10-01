@@ -42,6 +42,33 @@ class Player(Entity):
         self.frame_index = 0
         self.animation_speed = 0.1
 
+        # Power-ups setup
+        self.shield_active = False
+        self.shield_end_time = 0
+        self.shield_image = pygame.image.load("Assets/Effects/Shield/Shield.png").convert_alpha()
+
+        # duration time of power-ups
+        self.shield_duration = 0
+        self.slow_motion_duration = 0
+        self.weapon_upgrade_duration = 0 
+        self.machine_gun_duration = 0
+        self.fortress_shield_duration = 0
+
+        self.shoot_upgrade_active = False
+        self.shoot_upgrade_end = 0
+
+        self.slow_motion_active = False
+        self.slow_motion_end = 0
+
+        self.machine_gun_active = False
+        self.machine_gun_end = 0
+
+        self.bomb_active = False
+        self.bomb_end = 0
+
+        self.fortress_shield_active = False
+        self.fortress_shield_end = 0
+
         # Sounds
         self.sounds = {
             'attack_sound': pygame.mixer.Sound('Assets/Audio/Fire.wav'),
@@ -49,8 +76,6 @@ class Player(Entity):
         }
         self.sounds['attack_sound'].set_volume(0.4)
         self.sounds['hit_sound'].set_volume(0.4)
-
-
 
     def import_player_assets(self):
         character_path = 'Assets/Entities/Player/'
@@ -113,26 +138,47 @@ class Player(Entity):
         if self.frame_index >= len(animation):
             self.frame_index = 0
 
-        # Set the image
-        self.image = animation[int(self.frame_index)]
-        self.rect = self.image.get_rect(center=self.hitbox.center)
+        # Reiniciar imagen base en cada frame
+        base_image = animation[int(self.frame_index)].copy()
+        self.rect = base_image.get_rect(center=self.hitbox.center)
 
+        # Damage shoot boost → rojo
+        if self.shoot_upgrade_active:
+            base_image.fill((255, 0, 0), special_flags=pygame.BLEND_RGB_ADD)
+        
+        # Machine gun → naranja
+        if self.machine_gun_active:
+            base_image.fill((255, 155, 0), special_flags=pygame.BLEND_RGB_ADD)
+
+        # Escudo → overlay
+        if self.shield_active:
+            shield_scaled = pygame.transform.scale(self.shield_image, base_image.get_size())
+            base_image.blit(shield_scaled, (0, 0))
+
+        # Parpadeo al recibir daño
         if not self.vulnerable:
             alpha = self.wave_value()
-            self.image.set_alpha(alpha) 
+            base_image.set_alpha(alpha)
         else:
-            self.image.set_alpha(255)
+            base_image.set_alpha(255)
+
+        self.image = base_image
+
 
     def return_damage(self):
         return self.damage
     
     def get_damage(self, enemy, attack_type):
         if self.vulnerable:
-            self.sounds['hit_sound'].play()
-            if attack_type == 'bullet':
-                self.health -= enemy.return_damage()
-            self.hurt_time = pygame.time.get_ticks()
-            self.vulnerable = False
+            if not self.shield_active:
+                self.sounds['hit_sound'].play()
+                if attack_type == 'bullet':
+                    self.health -= enemy.return_damage()
+                self.hurt_time = pygame.time.get_ticks()
+                self.vulnerable = False
+            else:
+                self.sounds['attack_sound'].play()
+
 
     def get_grid_position(self):
         grid_x = self.rect.centerx // TILESIZE
@@ -143,19 +189,78 @@ class Player(Entity):
         if self.health <= 0:
             self.kill()
 
-    def debug_draw(self, surface, offset):
-        debug_rect = self.rect.copy()
-        debug_rect.topleft -= offset 
-        pygame.draw.rect(surface, (255, 0, 0), debug_rect, 2)
+    def handle_powerups(self):
+        current_time = pygame.time.get_ticks()
 
-        debug_hitbox = self.hitbox.copy()
-        debug_hitbox.topleft -= offset
-        pygame.draw.rect(surface, (0, 255, 0), debug_hitbox, 2)
+        # Shield
+        if self.shield_active and current_time > self.shield_end_time:
+            self.shield_active = False
+
+        # extra damage
+        if self.shoot_upgrade_active and current_time > self.shoot_upgrade_end:
+            self.shoot_upgrade_active = False
+            self.damage = self.stats['damage']
+
+        # slow motion
+        if self.slow_motion_active and current_time > self.slow_motion_end:
+            self.slow_motion_active = False
+
+        # machine_gun
+        if self.machine_gun_active and current_time > self.machine_gun_end:
+            self.attack_cooldown = 800
+            self.machine_gun_active = False
+
+        # bomb
+        if self.bomb_active and current_time > self.bomb_end: 
+            self.bomb_active = False
+
+        # forstress shield
+        if self.fortress_shield_active and current_time > self.fortress_shield_end:
+            self.fortress_shield_active = False
+            print('Fortress shield deactivated')
+
+    def activate_shield(self, duration):
+        self.shield_active = True
+        self.shield_duration = duration * 1000
+        self.shield_end_time = pygame.time.get_ticks() + duration * 1000
+
+    def upgrade_shoot(self, duration):
+        self.shoot_upgrade_active = True
+        if self.damage < self.stats['damage'] * 2:
+            self.damage *= 2
+        self.shoot_upgrade_duration = duration * 1000
+        self.shoot_upgrade_end = pygame.time.get_ticks() + duration * 1000
+
+    def slow_motion(self, duration):
+        self.slow_motion_active = True
+        self.slow_motion_duration= duration * 1000
+        self.slow_motion_end = pygame.time.get_ticks() + duration * 1000
+
+    def get_health(self):
+        if self.health < self.stats["health"]:
+            self.health += 1
+
+    def bomb_everyone(self, duration):
+        self.bomb_active = True
+        self.bomb_end = pygame.time.get_ticks() + duration * 1000
+
+    def fortress_shield (self, duration):
+        self.fortress_shield_active = True
+        self.fortress_shield_duration = duration * 1000
+        self.fortress_shield_end = pygame.time.get_ticks() + duration * 1000
+        print("Fortress shield activated")
+
+    def get_machine_gun(self, duration):
+        self.attack_cooldown = 200
+        self.machine_gun_active = True
+        self.machine_gun_duration= duration * 1000
+        self.machine_gun_end = pygame.time.get_ticks() + duration * 1000
 
     def update(self):
         self.input()
         self.check_death()
         self.cooldowns()
         self.get_status()
+        self.handle_powerups()
         self.animate()
         self.move(self.speed)

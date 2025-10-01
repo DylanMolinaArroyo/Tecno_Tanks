@@ -28,6 +28,22 @@ class UI:
         self.timer_pos = (10, 180)
         self.round_pos = (10, 50)
 
+        # Power-ups setup
+        self.icon_size = (40, 40)
+        self.powerup_icons = {
+            "shield": pygame.transform.scale(pygame.image.load("Assets/Objects/PowerUps/shield.png"), self.icon_size),
+            "weapon": pygame.transform.scale(pygame.image.load("Assets/Objects/PowerUps/shoot_upgrade.png"), self.icon_size),
+            "slow": pygame.transform.scale(pygame.image.load("Assets/Objects/PowerUps/clock.png"), self.icon_size),
+            "machine_gun": pygame.transform.scale(pygame.image.load("Assets/Objects/PowerUps/machine_gun.png"), self.icon_size),
+            "fortress_shield": pygame.transform.scale(pygame.image.load("Assets/Objects/PowerUps/fortress_shield.png"), self.icon_size)
+        }
+        self.powerup_start_y = 250
+
+        self.powerup_spacing = 60
+        self.bar_height = 6
+        self.margin = 10
+
+
 
     def show_health(self, current, max_amount):
         for i in range(max_amount):
@@ -104,9 +120,65 @@ class UI:
 
         return remaining == 0
 
+    def show_powerups(self, player):
+        current_time = pygame.time.get_ticks()
+        x = self.display_surface.get_width() - self.margin
+        y = self.margin
+        bar_height = 8
+        spacing = 60
 
+        def draw_bar(icon, remaining, total, pos_x, pos_y):
+
+            icon_rect = icon.get_rect(topright=(pos_x, pos_y))
+            self.display_surface.blit(icon, icon_rect)
+
+            # Barra debajo del ícono
+            bar_width = icon_rect.width
+
+            fill_ratio = max(0, min(1, remaining / total))
+
+            background_rect = pygame.Rect(icon_rect.left, icon_rect.bottom + 4, bar_width, bar_height)
+            health_rect = pygame.Rect(icon_rect.left, icon_rect.bottom + 4, int(bar_width * fill_ratio), bar_height)
+
+            pygame.draw.rect(self.display_surface, (0, 0, 0), background_rect)
+            pygame.draw.rect(self.display_surface, (0, 255, 0), health_rect)
+            pygame.draw.rect(self.display_surface, (0, 0, 0), background_rect, 2)
+
+        # Shield
+        if player.shield_active:
+            total = player.shield_duration
+            remaining = max(0, (player.shield_end_time - current_time))
+            draw_bar(self.powerup_icons["shield"], remaining, total, x, y)
+            y += spacing
+
+        # Weapon upgrade
+        if player.shoot_upgrade_active:
+            total = player.shoot_upgrade_duration
+            remaining = max(0, (player.shoot_upgrade_end - current_time))
+            draw_bar(self.powerup_icons["weapon"], remaining, total, x, y)
+            y += spacing
+
+        # Slow motion
+        if player.slow_motion_active:
+            total = player.slow_motion_duration
+            remaining = max(0, (player.slow_motion_end - current_time))
+            draw_bar(self.powerup_icons["slow"], remaining, total, x, y)
+
+        # Machine gun
+        if player.machine_gun_active:
+            total = player.machine_gun_duration
+            remaining = max(0, (player.machine_gun_end - current_time))
+            draw_bar(self.powerup_icons["machine_gun"], remaining, total, x, y)
+
+        # Fortress shield
+        if player.fortress_shield_active:
+            total = player.fortress_shield_duration
+            remaining = max(0, (player.fortress_shield_end - current_time))
+            draw_bar(self.powerup_icons["fortress_shield"], remaining, total, x, y)
+            
     def display(self, player, difficulty_name, total_rounds, current_round):
         self.show_health(player.health, player.stats['health'])
         self.show_timer()
         self.show_difficulty(difficulty_name)
         self.show_rounds(total_rounds, current_round)
+        self.show_powerups(player)
