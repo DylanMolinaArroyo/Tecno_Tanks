@@ -2,8 +2,7 @@ from Code.Classes.tile import Tile
 from Code.Utilities.settings import *
 
 class Structure_tile(Tile):
-    def __init__(self, pos, groups, estructure_name, surface, player,hitbox_left=10, hitbox_right=10, hitbox_top=10, hitbox_bottom=10
-):
+    def __init__(self, pos, groups, estructure_name, surface, player,hitbox_left=10, hitbox_right=10, hitbox_top=10, hitbox_bottom=10):
         sprite_type = "structure"
         
         super().__init__(
@@ -38,8 +37,8 @@ class Structure_tile(Tile):
 
     def check_death(self):
         if self.health <= 0:
-            self.kill()
             self.destroyed = True
+            self.kill()
     
     def structure_update(self):
         self.check_death()

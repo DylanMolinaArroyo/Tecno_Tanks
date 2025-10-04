@@ -51,7 +51,6 @@ class Level:
         self.bonus_interval = 120 * 1000  # 2 minutes in ms
 
         # Fortress setup
-        self.fortress_destroyed = False
         self.fortress_shield_applied = False
 
         # user interface
@@ -94,8 +93,14 @@ class Level:
                                 case "3":
                                     Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'walls', graphics['wall'])
                                 case "5":
-                                    self.structure = Structure_tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'fortress', graphics['house'], hitbox_top=60, player=self.player)
-                                    
+                                    self.structure = Structure_tile(
+                                        (x, y),
+                                        [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites],
+                                        'fortress',
+                                        graphics['house'],
+                                        hitbox_top=60,
+                                        player=self.player,
+                                    )
                         if style == 'grass':
                             random_grass_image = choice(graphics['grass'])
                             Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'grass', random_grass_image)
@@ -178,7 +183,7 @@ class Level:
                         elif target_sprite.sprite_type == 'barrier' and bullet_sprite.origin_type == 'player' or bullet_sprite.origin_type == 'enemy':
                             bullet_sprite.explode_and_kill()
 
-                        elif target_sprite.sprite_type == 'structure' and bullet_sprite.origin_type == 'player' or bullet_sprite.origin_type == 'enemy':
+                        elif target_sprite.sprite_type == 'structure' and bullet_sprite.origin_type == 'enemy':
                             target_sprite.get_damage(self.player, bullet_sprite.sprite_type)
                             bullet_sprite.explode_and_kill()
 
@@ -388,7 +393,3 @@ class YSortCameraGroup(pygame.sprite.Group):
         estructure_sprites = [sprite for sprite in self.sprites() if hasattr(sprite,'sprite_type') and sprite.sprite_type == 'structure']
         for estructure in estructure_sprites:
             estructure.structure_update()
-
-            if estructure.destroyed:
-                print("fortaleza destruida")
-                self.fortress_destroyed = True

@@ -262,7 +262,7 @@ class Game:
             self.win = False
             self.state = 'end'
         
-        elif self.level.fortress_destroyed:
+        elif self.level.structure.destroyed:
             self.win = False
             self.state = 'end'
 

@@ -1,4 +1,6 @@
 import pygame
+import random
+import math
 
 from Code.Functions.A_star import a_star
 from Code.Utilities.settings import *
@@ -64,11 +66,20 @@ class Enemy(Entity):
         self.slow_motion_applied = False
         self.clock_image = pygame.image.load("Assets/Effects/Clock/Clock_effect.png").convert_alpha()
 
-
-        # cache de pathfinding
+        # pathfinding cache
         self.last_target = None
         self.last_path_time = 0
-        self.path_refresh_rate = 400  # ms entre recalcular rutas
+        self.path_refresh_rate = 400
+
+        # wandering setup
+        self.is_wandering = False
+        self.wander_direction = pygame.math.Vector2()
+        self.wander_last_time = 0
+        self.wander_interval = random.randint(600, 1400)         # ms between direction changes
+        self.wander_speed = max(0.4, self.speed * 0.6)           # wandering speed
+
+        self.wander_shoot_last_time = 0
+        self.wander_shoot_interval = random.randint(900, 2000)   # ms between shoots while wandering
 
         # Sounds
         self.sounds = {
@@ -220,7 +231,7 @@ class Enemy(Entity):
         else:
             base_image.set_alpha(255)
 
-        self.image = base_image 
+        self.image = base_image
 
 
     def cooldowns(self):
@@ -296,6 +307,48 @@ class Enemy(Entity):
             self.direction = pygame.math.Vector2()
             self.status = self.status.split('_')[0] + '_idle'
 
+    def wander_move(self):
+        """Movimiento aleatorio cuando no hay ruta disponible. También gestiona disparos 'lentos'."""
+        current_time = pygame.time.get_ticks()
+
+        # elegir nueva dirección aleatoria si pasó el intervalo o no hay dirección
+        if self.wander_direction.length_squared() == 0 or (current_time - self.wander_last_time) >= self.wander_interval:
+            angle = random.uniform(0, 2 * math.pi)
+            dx = math.cos(angle)
+            dy = math.sin(angle)
+            self.wander_direction = pygame.math.Vector2(dx, dy)
+            # normalizar y evitar vectores casi nulos
+            if self.wander_direction.length() == 0:
+                self.wander_direction = pygame.math.Vector2(1, 0)
+            else:
+                self.wander_direction = self.wander_direction.normalize()
+
+            # nuevo intervalo aleatorio para el próximo cambio (no tan rápido)
+            self.wander_interval = random.randint(600, 1600)
+            self.wander_last_time = current_time
+
+        # mover usando la dirección de wander (con colisiones, similar a enemy_move)
+        self.direction = self.wander_direction
+        # horizontal
+        self.hitbox.x += self.direction.x * self.wander_speed
+        self.collision('horizontal')
+        # vertical
+        self.hitbox.y += self.direction.y * self.wander_speed
+        self.collision('vertical')
+        self.rect.center = self.hitbox.center
+
+        # ajustar status para animación
+        if abs(self.direction.y) > abs(self.direction.x):
+            self.status = 'up' if self.direction.y < 0 else 'down'
+        else:
+            self.status = 'left' if self.direction.x < 0 else 'right'
+
+        # disparo aleatorio controlado (no tan rápido)
+        if (current_time - self.wander_shoot_last_time) >= self.wander_shoot_interval and self.can_attack:
+            self.attack()
+            self.wander_shoot_last_time = current_time
+            self.wander_shoot_interval = random.randint(900, 2200)
+
     def check_death(self):
         if self.health <= 0 or self.player.bomb_active:
             self.sounds['death_sound'].play()
@@ -323,7 +376,12 @@ class Enemy(Entity):
             self.request_path(self.matrix_route, self.structure_pos, enemyPos)
             self.target = "structure"
 
-        self.enemy_move(self.speed)
+        if self.path:
+            self.is_wandering = False
+            self.enemy_move(self.speed)
+        else:
+            self.is_wandering = True
+            self.wander_move()
 
         # slow motion
         if self.player.slow_motion_active and not self.slow_motion_applied:
@@ -334,6 +392,7 @@ class Enemy(Entity):
         self.hit_reaction()
         self.animate()
         self.cooldowns()
+
 
 
     def enemy_update(self, player):
