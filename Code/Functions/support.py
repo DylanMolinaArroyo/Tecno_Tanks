@@ -2,6 +2,7 @@ from csv import reader
 from os import walk
 
 import pygame
+import random
 
 def import_csv_layout(path):
     terrain_map = []
@@ -11,7 +12,6 @@ def import_csv_layout(path):
             terrain_map.append(list(row))
         return terrain_map
     
-import random
 
 def get_random_position(matrix, index: str ):
     posiciones_internas = []

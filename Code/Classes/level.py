@@ -44,11 +44,11 @@ class Level:
 
         # Power uo setup
         self.last_power_up_time = pygame.time.get_ticks()
-        self.power_up_interval = 5 * 1000  # 1 minute in ms
+        self.power_up_interval = 60 * 1000  # 1 minute in ms
 
         # Bonuses setup
         self.last_bonues_time = pygame.time.get_ticks()
-        self.bonus_interval = 10 * 1000  # 2 minutes in ms
+        self.bonus_interval = 120 * 1000  # 2 minutes in ms
 
         # Fortress setup
         self.fortress_destroyed = False
@@ -57,7 +57,9 @@ class Level:
         # user interface
         self.ui = UI()
 
+        # Path request setup
         self.path_request = path_request.PathRequest()
+        self.matrix_route = import_csv_layout('Assets/Map_matrix/MapaJuego_Obstaculos.csv'),
 
         # sprite setup
         self.create_map()
@@ -99,7 +101,6 @@ class Level:
                             Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'grass', random_grass_image)
 
     def generate_enemy_queue(self):
-        """Crea la lista de enemigos según la dificultad."""
         self.enemy_queue.clear()
 
         for enemy_type, amount in self.difficulty_config.items():
@@ -128,10 +129,10 @@ class Level:
                 (x * TILESIZE, y * TILESIZE),
                 [self.visible_sprites, self.attackble_sprites],
                 self.obstacle_sprites,
-                self.damage_player,
                 self.create_bullet,
                 self.player,
                 self.structure,
+                self.matrix_route,
                 path_request=self.path_request
             )
 
@@ -148,6 +149,17 @@ class Level:
                     for target_sprite in collision_sprites:
                         if target_sprite.sprite_type in ['grass', 'walls']:
                             if bullet_sprite.rect.colliderect(target_sprite.hitbox):
+                                # Get the position in pixels
+                                x, y = target_sprite.rect.topleft
+
+                                # Convert to matrix indexes
+                                row = y // TILESIZE
+                                col = x // TILESIZE
+
+                                # Update matrix with -1
+                                self.matrix_route[0][row][col] = '-1'
+
+                                # Kill the sprite
                                 target_sprite.kill()
                                 bullet_sprite.explode_and_kill()
                                 break
@@ -185,15 +197,11 @@ class Level:
         PowerUp(bonus_type, (x * TILESIZE, y * TILESIZE), 
                 [self.visible_sprites, self.power_up_sprites], 
                 bonus_data[bonus_type])
-
-    def damage_player(self,amount):
-        if self.player.vulnerable:
-            self.player.health -+ amount
-            self.player.vulnerable = False
-            self.player.hurt_time = pygame.time.get_ticks()
-            
+  
     def all_enemies_defeated(self):
-        return not any(sprite for sprite in self.visible_sprites if hasattr(sprite, 'sprite_type') and sprite.sprite_type == 'enemy')
+        return not any(
+            sprite for sprite in self.visible_sprites if hasattr(sprite, 'sprite_type') and sprite.sprite_type == 'enemy'
+        )
     
     def spawn_power_up(self):
         layouts = import_csv_layout('Assets/Map_matrix/MapaJuego_Objetos.csv')
@@ -382,4 +390,5 @@ class YSortCameraGroup(pygame.sprite.Group):
             estructure.structure_update()
 
             if estructure.destroyed:
+                print("fortaleza destruida")
                 self.fortress_destroyed = True

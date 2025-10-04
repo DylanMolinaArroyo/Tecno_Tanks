@@ -11,7 +11,7 @@ def es_transitable(matrix, x, y):
     """Chequea si una celda es transitable."""
     if y < 0 or y >= len(matrix) or x < 0 or x >= len(matrix[0]):
         return False
-    return matrix[y][x] in ("-1")
+    return matrix[y][x] in ('-1')
 
 def reconstruir_ruta(came_from, current):
     ruta = [current]

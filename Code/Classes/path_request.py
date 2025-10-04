@@ -1,19 +1,11 @@
 import json
 
 from Code.Functions.A_star import a_star
-from Code.Functions.support import import_csv_layout
 
 class PathRequest:
-    def __init__(self, csv_path='Assets/Map_matrix/MapaJuego_Obstaculos.csv'):
-        self.matrix = self.load_matrix(csv_path)
 
-    def load_matrix(self, csv_path):
-        matrix = import_csv_layout(csv_path)
-        return matrix
-
-    def solicitar_ruta(self, coordenada_enemigo, coordenada_jugador):
-
-        ruta = a_star(coordenada_jugador,coordenada_enemigo, self.matrix)
+    def solicitar_ruta(self, matriz_ruta, coordenada_enemigo, coordenada_jugador):
+        ruta = a_star(coordenada_jugador,coordenada_enemigo, matriz_ruta[0])
 
         try:
             return ruta

@@ -1,17 +1,21 @@
 import pygame
 
+from Code.Functions.A_star import a_star
 from Code.Utilities.settings import *
 from Code.Entities.entity import Entity
 from Code.Functions.support import import_folder
 
 class Enemy(Entity):
-    def __init__(self, enemy_name, pos, groups, obstacle_sprites, damage_player, create_bullet, player, structure, path_request):
+    def __init__(self, enemy_name, pos, groups, obstacle_sprites, create_bullet, player, structure, matrix_route, path_request):
         super().__init__(groups)
 
         self.sprite_type = 'enemy'
 
         self.player = player
         self.structure_pos = structure.get_grid_position()
+        self.matrix_route = matrix_route
+
+        self.target = "player"
 
         # graphics setup
         self.import_graphics(enemy_name)
@@ -38,7 +42,6 @@ class Enemy(Entity):
         # player interaction
         self.can_attack = True
         self.attack_time = None
-        self.damage_player = damage_player
 
         # invincibility timer
         self.vulnerable = True
@@ -101,45 +104,56 @@ class Enemy(Entity):
 
         return (distance, direction)
     
-    def get_path(self, player_pos, enemy_pos):
-        self.path = self.path_request.solicitar_ruta(player_pos, enemy_pos)
+    def get_structure_distance_direction(self):
+        enemy_vec = pygame.math.Vector2(self.rect.center)
+        structure_vec = pygame.math.Vector2(
+            self.structure_pos[0] * TILESIZE + TILESIZE // 2,
+            self.structure_pos[1] * TILESIZE + TILESIZE // 2
+        )
+        distance = (structure_vec - enemy_vec).magnitude()
 
-    def request_path(self, target_pos, enemy_pos):
+        if distance > 0:
+            direction = (structure_vec - enemy_vec).normalize()
+        else:
+            direction = pygame.math.Vector2()
+
+        return (distance, direction)
+
+    def request_path(self, matrix_route, target_pos, enemy_pos):
         """Solicita una nueva ruta si cambió el target o pasó el tiempo mínimo."""
         current_time = pygame.time.get_ticks()
         if (self.last_target != target_pos or
             current_time - self.last_path_time >= self.path_refresh_rate):
             
-            self.get_path(target_pos, enemy_pos)
+            self.path = self.path_request.solicitar_ruta(matrix_route, target_pos, enemy_pos)
             self.last_target = target_pos
             self.last_path_time = current_time
-
+        
     def get_status(self, player):
         if not self.state_locked:
-            distance, direction = self.get_player_distance_direction(player)
+            if self.target == "player":
+                distance, direction = self.get_player_distance_direction(player)
+            else:
+                distance, direction = self.get_structure_distance_direction()
 
-            # Attack
+            # ataque
             if distance <= self.attack_radius and self.can_attack:
                 if self.status != 'attack':
                     self.frame_index = 0
                 self.status = 'attack'
 
-            # Movement
-            elif distance <= self.notice_radius:
+            # movimiento
+            elif distance <= self.notice_radius or self.target == "structure":
                 if abs(direction.y) > abs(direction.x):
-                    if direction.y < 0:
-                        self.status = 'up'
-                    else:
-                        self.status = 'down'
+                    self.status = 'up' if direction.y < 0 else 'down'
                 else:
-                    if direction.x < 0:
-                        self.status = 'left'
-                    else:
-                        self.status = 'right'
-            # Idle
+                    self.status = 'left' if direction.x < 0 else 'right'
+
+            # idle
             else:
                 self.status = self.status.split('_')[0] + '_idle'
                 self.path = []
+
 
     def actions(self, player):
         if self.status == 'attack':
@@ -147,30 +161,42 @@ class Enemy(Entity):
             _, direction = self.get_player_distance_direction(player)
 
             if abs(direction.y) > abs(direction.x):
-                if direction.y < 0:
-                    self.status = 'up'
-                else:
-                    self.status = 'down'
+                self.status = 'up' if direction.y < 0 else 'down'
             else:
-                if direction.x < 0:
-                    self.status = 'left'
-                else:
-                    self.status = 'right'
+                self.status = 'left' if direction.x < 0 else 'right'
 
             self.attack()
+
         elif self.status in ['up', 'down', 'left', 'right']:
-            self.direction = self.get_player_distance_direction(player)[1]
+            distance, direction = self.get_player_distance_direction(player)
+
+            if distance <= self.notice_radius:
+                self.direction = direction
+            else:
+                enemy_vec = pygame.math.Vector2(self.rect.center)
+                structure_vec = pygame.math.Vector2(
+                    self.structure_pos[0] * TILESIZE + TILESIZE // 2,
+                    self.structure_pos[1] * TILESIZE + TILESIZE // 2
+                )
+                self.direction = (structure_vec - enemy_vec).normalize()
         else:
             self.direction = pygame.math.Vector2()
 
+
     def attack(self):
         self.sounds['attack_sound'].play()
-        if self.create_bullet:
+
+        if self.target == "player" and self.create_bullet:
             self.create_bullet(self, self.bullet_speed)
-            self.attack_time = pygame.time.get_ticks()
+
+        elif self.target == "structure":
+            self.create_bullet(self, self.bullet_speed)
+
+        self.attack_time = pygame.time.get_ticks()
         self.can_attack = False 
         self.state_locked = True
         self.state_lock_time = pygame.time.get_ticks()
+
 
     def animate(self):
         animation = self.animations[self.status]
@@ -291,20 +317,24 @@ class Enemy(Entity):
 
         if distance_to_player <= self.notice_radius:
             playerPos = self.player.get_grid_position()
-            self.request_path(playerPos, enemyPos)
+            self.request_path(self.matrix_route, playerPos, enemyPos)
+            self.target = "player"
         else:
-            self.request_path(self.structure_pos, enemyPos)
+            self.request_path(self.matrix_route, self.structure_pos, enemyPos)
+            self.target = "structure"
 
+        self.enemy_move(self.speed)
+
+        # slow motion
         if self.player.slow_motion_active and not self.slow_motion_applied:
             self.apply_slow_motion()
         elif not self.player.slow_motion_active and self.slow_motion_applied:
             self.remove_slow_motion()
-        
-        self.enemy_move(self.speed)
 
         self.hit_reaction()
         self.animate()
         self.cooldowns()
+
 
     def enemy_update(self, player):
         self.get_status(player)

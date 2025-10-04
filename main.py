@@ -8,8 +8,7 @@ class Game:
     def __init__(self):
         pygame.init()
         
-        # CORRECCIÓN: Usar HEIGTH si es que así está definido en settings.py
-        self.screen = pygame.display.set_mode((WIDTH, HEIGTH))  # Cambié HEIGHT por HEIGTH
+        self.screen = pygame.display.set_mode((WIDTH, HEIGTH))
         pygame.display.set_caption('TecnoTanks')
         self.clock = pygame.time.Clock()
 
@@ -60,7 +59,6 @@ class Game:
         self.lobby_back_button = Button(pos=(640, 500),
                             text_input="BACK", font=self.get_font(55), base_color="black", hovering_color="White")
 
-        # CORRECCIÓN: Usar HEIGTH aquí también
         self.bg_image = pygame.image.load("Assets/Map_tiles/MapaJuego.png")
         self.bg_image = pygame.transform.scale(self.bg_image, (WIDTH + 50, HEIGTH + 50))
 
@@ -93,16 +91,13 @@ class Game:
         surface.blit(text_surf, text_rect)
 
     def draw_text_input(self, surface, prompt, text, font, color, pos, max_width=300):
-        # Dibujar prompt
         prompt_surf = font.render(prompt, True, color)
         prompt_rect = prompt_surf.get_rect(midleft=(pos[0] - 150, pos[1]))
         surface.blit(prompt_surf, prompt_rect)
         
-        # Dibujar caja de texto
         text_surf = font.render(text, True, color)
         text_rect = text_surf.get_rect(midleft=(pos[0] + 50, pos[1]))
         
-        # Dibujar fondo de la caja de texto
         input_rect = pygame.Rect(text_rect.left - 5, text_rect.top - 5, 
                                max_width, text_rect.height + 10)
         pygame.draw.rect(surface, (50, 50, 50), input_rect)
@@ -140,41 +135,20 @@ class Game:
             button.changeColor(menu_mouse_pos)
             button.update(self.screen)
 
-    """def create_game_menu(self):
-        self.screen.blit(self.bg_image, (0, 0))
-        menu_mouse_pos = pygame.mouse.get_pos()
-
-        self.draw_text_with_outline(self.screen, "CREATING GAME...", self.get_font(80), "black", "white", (640, 200), outline_width=5)
-        
-        # Conectar al servidor y crear juego
-        if not self.network_client.connected:
-            if self.network_client.connect():
-                self.network_client.create_game()
-                # Configurar manejadores de mensajes
-                self.setup_network_handlers()
-            else:
-                self.draw_text_with_outline(self.screen, "CONNECTION FAILED", self.get_font(60), "red", "white", (640, 300), outline_width=3)
-        
-        self.back_button.changeColor(menu_mouse_pos)
-        self.back_button.update(self.screen)"""
-        
     def create_game_menu(self):
         self.screen.blit(self.bg_image, (0, 0))
         menu_mouse_pos = pygame.mouse.get_pos()
 
         self.draw_text_with_outline(self.screen, "CREATING GAME...", self.get_font(80), "black", "white", (640, 200), outline_width=5)
     
-    # Solo intentar conectar una vez
         if not self.network_client.connected:
             if self.network_client.connect():
                 self.network_client.create_game()
                 self.setup_network_handlers()
             else:
                 self.draw_text_with_outline(self.screen, "CONNECTION FAILED", self.get_font(60), "red", "white", (640, 300), outline_width=3)
-                # Mostrar mensaje de ayuda
                 self.draw_text_with_outline(self.screen, "Check if server is running", self.get_font(30), "red", "white", (640, 350), outline_width=2)
     
-        # Mostrar estado de conexión
         status = "Connected" if self.network_client.connected else "Disconnected"
         self.draw_text_with_outline(self.screen, f"Status: {status}", self.get_font(30), "black", "white", (640, 400), outline_width=2)
     
@@ -279,7 +253,6 @@ class Game:
                 self.level = Level(self.difficulty)  
             except Exception as e:
                 print(f"Error creating level: {e}")
-                # Fallback para evitar el crash
                 self.state = 'choose'
                 return
                 
@@ -288,7 +261,11 @@ class Game:
         if self.level.player.health <= 0:
             self.win = False
             self.state = 'end'
-            
+        
+        elif self.level.fortress_destroyed:
+            self.win = False
+            self.state = 'end'
+
         elif self.level.all_enemies_defeated() and not self.level.enemy_queue and not self.level.enemies:
             self.win = True
             self.state = 'end'
@@ -313,7 +290,7 @@ class Game:
             elif event.key == pygame.K_RETURN:
                 self.input_active = False
             else:
-                if len(self.game_code) < 10:  # Limitar longitud
+                if len(self.game_code) < 10:
                     self.game_code += event.unicode
 
     def check_events(self):
@@ -373,17 +350,12 @@ class Game:
                 
                 elif self.state == 'lobby':
                     if self.is_host and self.start_game_button.checkForInput(mouse_pos) and self.players_connected == 2:
-                        # Iniciar juego multiplayer
                         self.difficulty = {"name": "Multiplayer", "enemyTankType1": 15, "enemyTankType2": 15, "enemyTankType3": 10, "enemyTankType4": 5}
                         self.state = 'play'
                     elif self.lobby_back_button.checkForInput(mouse_pos):
                         self.state = 'multiplayer_menu'
                         if self.network_client.connected:
                             self.network_client.disconnect()
-                
-                elif self.state == 'select_difficulty':
-                    # El manejo de dificultad se hace en select_difficulty_menu
-                    pass
                         
                 elif self.state == 'end':
                     if self.restart_button.checkForInput(mouse_pos):
@@ -398,24 +370,25 @@ class Game:
     def run(self):
         while True:
             self.check_events()
-            if self.state == 'menu':
-                self.main_menu()
-            elif self.state == 'choose':
-                self.play_menu()
-            elif self.state == 'multiplayer_menu':
-                self.multiplayer_menu()
-            elif self.state == 'create_game':
-                self.create_game_menu()
-            elif self.state == 'join_game':
-                self.join_game_menu()
-            elif self.state == 'lobby':
-                self.lobby_menu()
-            elif self.state == 'select_difficulty':
-                self.select_difficulty_menu()
-            elif self.state == 'play':
-                self.play()
-            elif self.state == 'end':
-                self.end_menu()
+            match self.state:
+                case 'menu':
+                    self.main_menu()
+                case 'choose':
+                    self.play_menu()
+                case 'multiplayer_menu':
+                    self.multiplayer_menu()
+                case 'create_game':
+                    self.create_game_menu()
+                case 'join_game':
+                    self.join_game_menu()
+                case 'lobby':
+                    self.lobby_menu()
+                case 'select_difficulty':
+                    self.select_difficulty_menu()
+                case 'end':     
+                    self.end_menu()
+                case 'play':
+                    self.play()
 
             pygame.display.update()
             self.clock.tick(FPS)

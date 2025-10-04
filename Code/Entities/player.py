@@ -248,7 +248,6 @@ class Player(Entity):
         self.fortress_shield_active = True
         self.fortress_shield_duration = duration * 1000
         self.fortress_shield_end = pygame.time.get_ticks() + duration * 1000
-        print("Fortress shield activated")
 
     def get_machine_gun(self, duration):
         self.attack_cooldown = 200
