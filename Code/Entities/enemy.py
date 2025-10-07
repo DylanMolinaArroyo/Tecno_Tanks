@@ -9,6 +9,21 @@ from Code.Functions.support import import_folder
 
 class Enemy(Entity):
     def __init__(self, enemy_name, pos, groups, obstacle_sprites, create_bullet, player, structure, matrix_route, path_request):
+        """
+        Initialize an Enemy sprite.
+
+        Args:
+            enemy_name (str): Name/type of the enemy tank.
+            pos (tuple): (x, y) position to spawn the enemy.
+            groups (list): Sprite groups to add this enemy to.
+            obstacle_sprites (pygame.sprite.Group): Group of obstacle sprites for collision.
+            create_bullet (callable): Function to create bullets.
+            player (Player): Reference to the player object.
+            structure (Structure): Reference to the structure/base object.
+            matrix_route (list): Matrix for pathfinding.
+            path_request (object): Object to request paths for movement.
+        """
+
         super().__init__(groups)
 
         self.sprite_type = 'enemy'
@@ -58,9 +73,9 @@ class Enemy(Entity):
         self.path = []
 
         # state lock
-        self.state_locked = False  # Bloquea el cambio de estado tras el ataque
-        self.state_lock_time = None  # Marca el tiempo de bloqueo
-        self.state_lock_duration = 500  # Duración del bloqueo en milisegundos
+        self.state_locked = False  # Locks state changes after attacking
+        self.state_lock_time = None  # Marks the time when the state was locked
+        self.state_lock_duration = 500  # Duration of the lock in milliseconds
 
         # slow motion state control
         self.slow_motion_applied = False
@@ -94,6 +109,13 @@ class Enemy(Entity):
 
 
     def import_graphics(self, name):
+        """
+        Imports animation frames for the enemy from the asset folders.
+
+        Args:
+            name (str): Enemy type/name for asset path.
+        """
+
         self.animations = {
             'up': [], 'down': [], 'left': [], 'right': [],
             'up_idle': [], 'down_idle': [], 'left_idle': [], 'right_idle': [],
@@ -104,6 +126,16 @@ class Enemy(Entity):
             self.animations[animation] = import_folder(main_path + animation)
 
     def get_player_distance_direction(self, player):
+        """
+        Calculates the distance and normalized direction vector from the enemy to the player.
+
+        Args:
+            player (Player): Reference to the player object.
+
+        Returns:
+            tuple: (distance, direction_vector)
+        """
+
         enemy_vec = pygame.math.Vector2(self.rect.center)
         player_vec = pygame.math.Vector2(player.rect.center)
         distance = (player_vec - enemy_vec).magnitude()
@@ -116,6 +148,13 @@ class Enemy(Entity):
         return (distance, direction)
     
     def get_structure_distance_direction(self):
+        """
+        Calculates the distance and normalized direction vector from the enemy to the structure/base.
+
+        Returns:
+            tuple: (distance, direction_vector)
+        """
+
         enemy_vec = pygame.math.Vector2(self.rect.center)
         structure_vec = pygame.math.Vector2(
             self.structure_pos[0] * TILESIZE + TILESIZE // 2,
@@ -131,7 +170,15 @@ class Enemy(Entity):
         return (distance, direction)
 
     def request_path(self, matrix_route, target_pos, enemy_pos):
-        """Solicita una nueva ruta si cambió el target o pasó el tiempo mínimo."""
+        """
+        Requests a new path to the target if the target changed or enough time has passed.
+
+        Args:
+            matrix_route (list): Pathfinding matrix.
+            target_pos (tuple): Target grid position.
+            enemy_pos (tuple): Enemy grid position.
+        """
+
         current_time = pygame.time.get_ticks()
         if (self.last_target != target_pos or
             current_time - self.last_path_time >= self.path_refresh_rate):
@@ -141,6 +188,13 @@ class Enemy(Entity):
             self.last_path_time = current_time
         
     def get_status(self, player):
+        """
+        Updates the enemy's status (attack, move, idle) based on distance to target.
+
+        Args:
+            player (Player): Reference to the player object.
+        """
+
         if not self.state_locked:
             if self.target == "player":
                 distance, direction = self.get_player_distance_direction(player)
@@ -167,6 +221,13 @@ class Enemy(Entity):
 
 
     def actions(self, player):
+        """
+        Performs actions based on the current status (attack, move, idle).
+
+        Args:
+            player (Player): Reference to the player object.
+        """
+
         if self.status == 'attack':
             self.path = []
             _, direction = self.get_player_distance_direction(player)
@@ -195,6 +256,10 @@ class Enemy(Entity):
 
 
     def attack(self):
+        """
+        Executes the enemy's attack, plays sound, and handles cooldowns/state lock.
+        """
+
         self.sounds['attack_sound'].play()
 
         if self.target == "player" and self.create_bullet:
@@ -210,6 +275,10 @@ class Enemy(Entity):
 
 
     def animate(self):
+        """
+        Handles animation frame updates, slow motion overlay, and invincibility effect.
+        """
+
         animation = self.animations[self.status]
 
         self.frame_index += self.animation_speed
@@ -235,6 +304,10 @@ class Enemy(Entity):
 
 
     def cooldowns(self):
+        """
+        Manages cooldown timers for attack, invincibility, and state lock.
+        """
+
         current_time = pygame.time.get_ticks()
         if not self.can_attack:
             if current_time - self.attack_time >= self.attack_cooldown:
@@ -247,15 +320,37 @@ class Enemy(Entity):
                 self.state_locked = False 
 
     def return_damage(self):
+        """
+        Returns the enemy's attack damage value.
+
+        Returns:
+            int: Damage value.
+        """
+
         damage = self.attack_damage
         return damage
     
     def get_grid_position(self):
+        """
+        Gets the enemy's current grid position based on its center coordinates.
+
+        Returns:
+            list: [grid_x, grid_y]
+        """
+
         grid_x = self.rect.centerx // TILESIZE
         grid_y = self.rect.centery // TILESIZE
         return [grid_x, grid_y]
     
     def get_damage(self, player, attack_type):
+        """
+        Applies damage to the enemy from the player, handles hit reaction and invincibility.
+
+        Args:
+            player (Player): Reference to the player object.
+            attack_type (str): Type of attack (e.g., 'bullet').
+        """
+
         if self.vulnerable:
             player_direction = self.get_player_distance_direction(player)[1]
             self.sounds['hit_sound'].play()
@@ -266,10 +361,21 @@ class Enemy(Entity):
             self.vulnerable = False
 
     def hit_reaction(self):
+        """
+        Handles the enemy's reaction when hit (knockback).
+        """
+
         if not self.vulnerable:
             self.move(-self.speed * 2)
 
     def enemy_move(self, speed):
+        """
+        Moves the enemy along its path using pathfinding.
+
+        Args:
+            speed (float): Movement speed.
+        """
+
         if self.path:
             target_x, target_y = self.path[0]
 
@@ -308,26 +414,27 @@ class Enemy(Entity):
             self.status = self.status.split('_')[0] + '_idle'
 
     def wander_move(self):
-        """Movimiento aleatorio cuando no hay ruta disponible. También gestiona disparos 'lentos'."""
+        """
+        Moves the enemy in a random direction when no path is available.
+        Also manages random shooting intervals.
+        """
+
         current_time = pygame.time.get_ticks()
 
-        # elegir nueva dirección aleatoria si pasó el intervalo o no hay dirección
         if self.wander_direction.length_squared() == 0 or (current_time - self.wander_last_time) >= self.wander_interval:
             angle = random.uniform(0, 2 * math.pi)
             dx = math.cos(angle)
             dy = math.sin(angle)
             self.wander_direction = pygame.math.Vector2(dx, dy)
-            # normalizar y evitar vectores casi nulos
+
             if self.wander_direction.length() == 0:
                 self.wander_direction = pygame.math.Vector2(1, 0)
             else:
                 self.wander_direction = self.wander_direction.normalize()
 
-            # nuevo intervalo aleatorio para el próximo cambio (no tan rápido)
             self.wander_interval = random.randint(600, 1600)
             self.wander_last_time = current_time
 
-        # mover usando la dirección de wander (con colisiones, similar a enemy_move)
         self.direction = self.wander_direction
         # horizontal
         self.hitbox.x += self.direction.x * self.wander_speed
@@ -337,34 +444,49 @@ class Enemy(Entity):
         self.collision('vertical')
         self.rect.center = self.hitbox.center
 
-        # ajustar status para animación
         if abs(self.direction.y) > abs(self.direction.x):
             self.status = 'up' if self.direction.y < 0 else 'down'
         else:
             self.status = 'left' if self.direction.x < 0 else 'right'
 
-        # disparo aleatorio controlado (no tan rápido)
         if (current_time - self.wander_shoot_last_time) >= self.wander_shoot_interval and self.can_attack:
             self.attack()
             self.wander_shoot_last_time = current_time
             self.wander_shoot_interval = random.randint(900, 2200)
 
     def check_death(self):
+        """
+        Checks if the enemy should die (health <= 0 or bomb effect) and removes it.
+        """
+
         if self.health <= 0 or self.player.bomb_active:
             self.sounds['death_sound'].play()
             self.kill()
 
     def apply_slow_motion(self):
+        """
+        Applies slow motion effect to the enemy (reduces speed, increases attack cooldown).
+        """
+
         self.speed = 1
         self.attack_cooldown = self.enemy_info['attack_cooldown'] * 2
         self.slow_motion_applied = True
 
     def remove_slow_motion(self):
+        """
+        Removes slow motion effect, restoring normal speed and attack cooldown.
+        """
+
         self.speed = self.enemy_info['speed']
         self.attack_cooldown = self.enemy_info['attack_cooldown']
         self.slow_motion_applied = False
 
     def update(self):
+        """
+        Main update loop for the enemy.
+        Handles pathfinding, movement, slow motion, hit reaction, animation, and cooldowns.
+        """
+
         distance_to_player, _ = self.get_player_distance_direction(self.player)
         enemyPos = self.get_grid_position()
 
@@ -393,9 +515,14 @@ class Enemy(Entity):
         self.animate()
         self.cooldowns()
 
-
-
     def enemy_update(self, player):
+        """
+        Updates the enemy's status, checks for death, and performs actions.
+
+        Args:
+            player (Player): Reference to the player object.
+        """
+        
         self.get_status(player)
         self.check_death()
         self.actions(player)

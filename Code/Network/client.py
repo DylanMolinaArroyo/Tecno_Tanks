@@ -12,7 +12,7 @@ class NetworkClient:
         self.message_handlers = {}
         self.receive_thread = None
         
-    def connect(self, host='localhost', port=5555):
+    def connect(self, host='192.168.56.1', port=5555):
         try:
             # Crear nuevo socket si no existe o está cerrado
             if self.socket:

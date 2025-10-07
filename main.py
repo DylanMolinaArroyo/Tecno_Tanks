@@ -6,6 +6,15 @@ from Code.Network.client import NetworkClient
 
 class Game: 
     def __init__(self):
+        """
+        Initialize the main game class, setting up the Pygame environment, UI elements, game state, and resources.
+        - Initializes Pygame and sets up the main display window.
+        - Configures the game clock and initial state variables.
+        - Loads fonts and creates all UI buttons for menus, mode selection, difficulty selection, end menu, multiplayer menu, and lobby.
+        - Loads and scales the background image for the game.
+        - Initializes game variables such as level, difficulty, network client, game code, input state, player count, and host status.
+        - Loads and plays the main background music in a loop.
+        """
         pygame.init()
         
         self.screen = pygame.display.set_mode((WIDTH, HEIGTH))
@@ -75,9 +84,15 @@ class Game:
         main_sound.play(loops=-1)
         
     def get_font(self, size):
+        """
+        Return a Pygame font object of the specified size using the predefined UI font.
+        """
         return pygame.font.Font(UI_FONT, size)
 
     def draw_text_with_outline(self, surface, text, font, color, outline_color, pos, outline_width=3):
+        """
+        Draws text with an outline on the given surface at the specified position.
+        """
         text_surf = font.render(text, True, color)
         outline_surf = font.render(text, True, outline_color)
         text_rect = text_surf.get_rect(center=pos)
@@ -91,6 +106,9 @@ class Game:
         surface.blit(text_surf, text_rect)
 
     def draw_text_input(self, surface, prompt, text, font, color, pos, max_width=300):
+        """
+        Draws a text input box with a prompt and current text on the given surface.
+        """
         prompt_surf = font.render(prompt, True, color)
         prompt_rect = prompt_surf.get_rect(midleft=(pos[0] - 150, pos[1]))
         surface.blit(prompt_surf, prompt_rect)
@@ -106,6 +124,9 @@ class Game:
         surface.blit(text_surf, text_rect)
 
     def main_menu(self):
+        """
+        Renders the main menu screen and updates the play/quit buttons.
+        """
         self.screen.blit(self.bg_image, (0, 0))
         menu_mouse_pos = pygame.mouse.get_pos()
 
@@ -116,6 +137,8 @@ class Game:
             button.update(self.screen)
 
     def play_menu(self):
+        """
+        Renders the mode selection menu and updates the one player/multiplayer buttons."""
         self.screen.blit(self.bg_image, (0, 0))
         menu_mouse_pos = pygame.mouse.get_pos()
 
@@ -126,6 +149,9 @@ class Game:
             button.update(self.screen)
 
     def multiplayer_menu(self):
+        """
+        Renders the multiplayer menu and updates the create/join/back buttons.
+        """
         self.screen.blit(self.bg_image, (0, 0))
         menu_mouse_pos = pygame.mouse.get_pos()
 
@@ -136,6 +162,9 @@ class Game:
             button.update(self.screen)
 
     def create_game_menu(self):
+        """
+        Handles the UI and logic for creating a multiplayer game, including connection status and error messages.
+        """
         self.screen.blit(self.bg_image, (0, 0))
         menu_mouse_pos = pygame.mouse.get_pos()
 
@@ -156,6 +185,9 @@ class Game:
         self.back_button.update(self.screen)
 
     def join_game_menu(self):
+        """
+        Renders the join game menu, including the game code input and join/back buttons.
+        """
         self.screen.blit(self.bg_image, (0, 0))
         menu_mouse_pos = pygame.mouse.get_pos()
 
@@ -168,6 +200,9 @@ class Game:
             button.update(self.screen)
 
     def lobby_menu(self):
+        """
+        Renders the lobby screen, showing game code, player count, and start/back buttons.
+        """
         self.screen.blit(self.bg_image, (0, 0))
         menu_mouse_pos = pygame.mouse.get_pos()
 
@@ -183,6 +218,9 @@ class Game:
         self.lobby_back_button.update(self.screen)
 
     def setup_network_handlers(self):
+        """
+        Registers network event handlers for multiplayer game events (game created/joined, player joined/disconnected).
+        """
         def handle_game_created(message):
             self.game_code = message['game_id']
             self.player_number = message['player_number']
@@ -210,6 +248,9 @@ class Game:
         self.network_client.register_handler('player_disconnected', handle_player_disconnected)
 
     def select_difficulty_menu(self):
+        """
+        Renders the difficulty selection menu and handles difficulty selection events.
+        """
         self.screen.blit(self.bg_image, (0, 0))
         menu_mouse_pos = pygame.mouse.get_pos()
         
@@ -248,6 +289,9 @@ class Game:
                     self.state = 'play'
 
     def play(self):
+        """
+        Runs the main game loop for a level, checks win/lose conditions, and updates game state accordingly.
+        """
         if not self.level:
             try:
                 self.level = Level(self.difficulty)  
@@ -271,6 +315,9 @@ class Game:
             self.state = 'end'
 
     def end_menu(self):
+        """
+        Renders the end menu (win/lose screen) and updates restart/quit buttons.
+        """
         self.screen.blit(self.bg_image, (0, 0))
         end_mouse_pos = pygame.mouse.get_pos()
 
@@ -284,6 +331,9 @@ class Game:
             button.update(self.screen)
 
     def handle_text_input(self, event):
+        """
+        Handles keyboard input for the game code text box in the join game menu.
+        """
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSPACE:
                 self.game_code = self.game_code[:-1]
@@ -294,6 +344,9 @@ class Game:
                     self.game_code += event.unicode
 
     def check_events(self):
+        """
+        Processes all Pygame events, updates game state, and handles button clicks for all menus.
+        """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 if self.network_client.connected:
@@ -368,6 +421,9 @@ class Game:
                         sys.exit()
     
     def run(self):
+        """
+        Main game loop. Continuously checks events, updates the current menu or game state, and refreshes the display.
+        """
         while True:
             self.check_events()
             match self.state:

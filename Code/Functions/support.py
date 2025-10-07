@@ -5,6 +5,16 @@ import pygame
 import random
 
 def import_csv_layout(path):
+    """
+    Loads a CSV file and returns a 2D list representing the terrain map.
+
+    Args:
+        path (str): Path to the CSV file.
+
+    Returns:
+        list: 2D list of terrain map values.
+    """
+
     terrain_map = []
     with open(path) as level_map:
         layout = reader(level_map, delimiter= ',')
@@ -14,6 +24,18 @@ def import_csv_layout(path):
     
 
 def get_random_position(matrix, index: str ):
+    """
+    Returns a random internal position from the matrix where the cell matches the given index.
+    Positions closer to the top are more likely to be chosen.
+
+    Args:
+        matrix (list): 2D map matrix.
+        index (str): Value to match in the matrix.
+
+    Returns:
+        tuple or None: (x, y) position or None if no match found.
+    """
+
     posiciones_internas = []
 
     for y in range(1, len(matrix) - 1):
@@ -32,6 +54,16 @@ def get_random_position(matrix, index: str ):
 
 
 def import_folder(path):
+    """
+    Loads all images from a folder and returns them as a list of pygame surfaces.
+
+    Args:
+        path (str): Path to the folder containing images.
+
+    Returns:
+        list: List of loaded pygame.Surface objects.
+    """
+    
     surface_list = []
 
     for _,__,img_files in walk(path):

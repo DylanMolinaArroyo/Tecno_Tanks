@@ -10,6 +10,20 @@ class Tile(pygame.sprite.Sprite):
         surface=pygame.Surface((TILESIZE, TILESIZE)),
         hitbox_left=10, hitbox_right=10, hitbox_top=10, hitbox_bottom=10
     ):
+        """
+        Initializes a tile object for the game map.
+
+        Args:
+            pos (tuple): (x, y) position of the tile.
+            groups (list): Sprite groups to add this tile to.
+            sprite_type (str): Type/name of the tile (e.g., 'wall', 'grass').
+            surface (pygame.Surface): Surface image for the tile.
+            hitbox_left (int): Left hitbox padding.
+            hitbox_right (int): Right hitbox padding.
+            hitbox_top (int): Top hitbox padding.
+            hitbox_bottom (int): Bottom hitbox padding.
+        """
+        
         super().__init__(groups)
 
         self.sprite_type = sprite_type

@@ -16,6 +16,12 @@ from random import choice
 
 class Level:
     def __init__(self, difficulty_config):
+        """
+        Initializes the Level object, sets up all game entities, map, waves, power-ups, and UI.
+
+        Args:
+            difficulty_config (dict): Configuration for enemy types and counts per difficulty.
+        """
 
         # Difficulty configuration
         self.difficulty_config = difficulty_config
@@ -64,6 +70,10 @@ class Level:
         self.create_map()
 
     def create_map(self):
+        """
+        Creates the game map by loading layouts and placing tiles, player, and structure.
+        """
+
         layouts = {
             'boundary': import_csv_layout('Assets/Map_matrix/MapaJuego_Obstaculos.csv'),
             'grass': import_csv_layout('Assets/Map_matrix/MapaJuego_Pasto.csv'),
@@ -106,6 +116,10 @@ class Level:
                             Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'grass', random_grass_image)
 
     def generate_enemy_queue(self):
+        """
+        Generates the queue of enemies to spawn based on difficulty configuration.
+        """
+
         self.enemy_queue.clear()
 
         for enemy_type, amount in self.difficulty_config.items():
@@ -119,6 +133,10 @@ class Level:
         self.total_rounds = len(self.enemy_queue) // self.wave_size + (1 if len(self.enemy_queue) % self.wave_size > 0 else 0)
 
     def spawn_wave(self):
+        """
+        Spawns a new wave of enemies from the queue at random positions.
+        """
+
         spawn_count = min(self.wave_size, len(self.enemy_queue))
         layouts = import_csv_layout('Assets/Map_matrix/MapaJuego_Enemigos.csv')
 
@@ -142,9 +160,20 @@ class Level:
             )
 
     def create_bullet(self, origin, bullet_speed):
+        """
+        Creates a bullet entity from the given origin with specified speed.
+
+        Args:
+            origin: The entity firing the bullet.
+            bullet_speed (float): Speed of the bullet.
+        """
         Bullet(origin, self.obstacle_sprites, [self.visible_sprites, self.bullet_sprites], bullet_speed, self.visible_sprites)
 
     def player_attack_logic(self):
+        """
+        Handles collision detection and logic for player and enemy bullets.
+        """
+
         if self.bullet_sprites:
             for bullet_sprite in self.bullet_sprites:
                 collision_sprites = pygame.sprite.spritecollide(
@@ -188,6 +217,10 @@ class Level:
                             bullet_sprite.explode_and_kill()
 
     def spawn_power_up(self):
+        """
+        Spawns a random power-up at a valid position on the map.
+        """
+
         layouts = import_csv_layout('Assets/Map_matrix/MapaJuego_Objetos.csv')
         x, y = get_random_position(layouts, '6')
         power_type = choice(list(power_up_data.keys()))
@@ -196,6 +229,9 @@ class Level:
                 power_up_data[power_type])
         
     def spawn_bonus(self):
+        """
+        Spawns a random bonus item at a valid position on the map.
+        """
         layouts = import_csv_layout('Assets/Map_matrix/MapaJuego_Objetos.csv')
         x, y = get_random_position(layouts, '6')
         bonus_type = choice(list(bonus_data.keys()))
@@ -204,19 +240,22 @@ class Level:
                 bonus_data[bonus_type])
   
     def all_enemies_defeated(self):
+        """
+        Checks if all enemies have been defeated.
+
+        Returns:
+            bool: True if no enemies remain, False otherwise.
+        """
+
         return not any(
             sprite for sprite in self.visible_sprites if hasattr(sprite, 'sprite_type') and sprite.sprite_type == 'enemy'
         )
-    
-    def spawn_power_up(self):
-        layouts = import_csv_layout('Assets/Map_matrix/MapaJuego_Objetos.csv')
-        x, y = get_random_position(layouts, '6')
-        power_type = choice(list(power_up_data.keys()))
-        PowerUp(power_type, (x * TILESIZE, y * TILESIZE), 
-                [self.visible_sprites, self.power_up_sprites], 
-                power_up_data[power_type])
         
     def manage_power_ups_and_bonus(self):
+        """
+        Manages spawning and collision logic for power-ups and bonuses.
+        """
+
         current_time = pygame.time.get_ticks()
         
         # --- PowerUps logic ---
@@ -237,6 +276,10 @@ class Level:
                 power.apply_effect(self.player)
         
     def check_enemies_death(self):
+        """
+        Checks for defeated enemies and manages wave progression and timers.
+        """
+
         enemy_sprites = [sprite for sprite in self.visible_sprites if getattr(sprite, 'sprite_type', None) == 'enemy']
 
         if not enemy_sprites and self.enemy_queue:
@@ -255,6 +298,10 @@ class Level:
                     self.waiting_next_wave = False
 
     def apply_fortress_shield(self):
+        """
+        Applies a shield (barrier) around the fortress structure.
+        """
+
         self.fortress_shield_applied = True
         layout = import_csv_layout('Assets/Map_matrix/MapaJuego_Barrera.csv')
         barrier_image = pygame.image.load('Assets/Objects/Unbreakable/barrier.png').convert_alpha()
@@ -274,6 +321,10 @@ class Level:
                     )
 
     def remove_fortress_shield(self):
+        """
+        Removes the fortress shield (barrier) from the map.
+        """
+
         self.fortress_shield_applied = False
         for sprite in self.obstacle_sprites.sprites():
             if getattr(sprite, 'sprite_type', None) == 'barrier':
@@ -281,6 +332,11 @@ class Level:
 
 
     def run(self):
+        """
+        Main update and draw loop for the level.
+        Handles entity updates, drawing, UI, and wave logic.
+        """
+
         # IMPORTANT TO KEEP IN THIS ORDER
 
         # 1 - Logic and sprites
@@ -305,6 +361,10 @@ class Level:
 
 class YSortCameraGroup(pygame.sprite.Group):
     def __init__(self):
+        """
+        Initializes the camera group for rendering sprites with Y-sorting and zoom.
+        """
+
         super().__init__()
         self.display_surface = pygame.display.get_surface()
         self.half_width = self.display_surface.get_size()[0] // 2
@@ -319,6 +379,13 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.zoom_factor = 0.7  # Zoom out 
 
     def custom_draw(self, player):
+        """
+        Draws all visible sprites with camera offset and zoom, including health bars.
+
+        Args:
+            player (Player): Reference to the player for camera centering.
+        """
+
         screen_w, screen_h = self.display_surface.get_size()
 
         self.offset.x = player.rect.centerx - (self.half_width / self.zoom_factor)
@@ -385,11 +452,22 @@ class YSortCameraGroup(pygame.sprite.Group):
                 pygame.draw.rect(self.display_surface, (0, 0, 0), background_rect, 2)
 
     def enemy_update(self, player):
+        """
+        Updates all enemy sprites in the group.
+
+        Args:
+            player (Player): Reference to the player object.
+        """
+
         enemy_sprites = [sprite for sprite in self.sprites() if hasattr(sprite,'sprite_type') and sprite.sprite_type == 'enemy']
         for enemy in enemy_sprites:
             enemy.enemy_update(player)
 
     def structure_update(self):
+        """
+        Updates all structure sprites in the group.
+        """
+
         estructure_sprites = [sprite for sprite in self.sprites() if hasattr(sprite,'sprite_type') and sprite.sprite_type == 'structure']
         for estructure in estructure_sprites:
             estructure.structure_update()
