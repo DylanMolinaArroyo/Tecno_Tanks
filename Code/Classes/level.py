@@ -82,7 +82,7 @@ class Level:
             'grass': import_folder('Assets/Objects/Attackable/grass'),
             'rock': pygame.image.load('Assets/Objects/Unbreakable/rock.png').convert_alpha(),
             'wall': pygame.image.load('Assets/Objects/Attackable/Wall/Wall.png').convert_alpha(),
-            'house': pygame.image.load('Assets/Objects/Attackable/house/house.png').convert_alpha()
+            'fortress': pygame.image.load('Assets/Objects/Attackable/fortress/Fortress.png').convert_alpha()
         }
 
         self.player = Player((2020, 2700), [self.visible_sprites, self.attackble_sprites], self.obstacle_sprites, self.create_bullet)
@@ -107,7 +107,7 @@ class Level:
                                         (x, y),
                                         [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites],
                                         'fortress',
-                                        graphics['house'],
+                                        graphics['fortress'],
                                         hitbox_top=60,
                                         player=self.player,
                                     )
