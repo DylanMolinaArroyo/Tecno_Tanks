@@ -53,7 +53,7 @@ class Structure_tile(Tile):
         
         return [grid_x, grid_y]
     
-    def get_damage(self, player, attack_type):
+    def get_damage(self, enemy, attack_type):
         """
         Applies damage to the structure tile if hit by a bullet.
 
@@ -63,7 +63,7 @@ class Structure_tile(Tile):
         """
 
         if attack_type == 'bullet':
-            self.health -= player.return_damage()
+            self.health -= enemy.return_damage()
 
     def check_death(self):
         """

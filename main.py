@@ -15,6 +15,7 @@ class Game:
         - Initializes game variables such as level, difficulty, network client, game code, input state, player count, and host status.
         - Loads and plays the main background music in a loop.
         """
+        
         pygame.init()
         
         self.screen = pygame.display.set_mode((WIDTH, HEIGTH))

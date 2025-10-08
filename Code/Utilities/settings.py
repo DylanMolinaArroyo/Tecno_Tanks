@@ -22,20 +22,20 @@ tanks_data =  {
 
 # power ups
 power_up_data =  {
-   'shield':{'duration_time': 30, 'effect': 0, 'sound':'Assets/Audio/Fire.wav'},
-   'shoot_upgrade':{'duration_time': 20, 'effect': 2, 'sound':'Assets/Audio/Fire.wav'},
-   'clock':{'duration_time': 10, 'effect': 10, 'sound':'Assets/Audio/Fire.wav'},
+   'shield':{'duration_time': 20, 'effect': 0, 'sound':'Assets/Audio/powerUps/shield.wav'},
+   'shoot_upgrade':{'duration_time': 20, 'effect': 2, 'sound':'Assets/Audio/powerUps/shoot_upgrade.wav'},
+   'clock':{'duration_time': 10, 'effect': 10, 'sound':'Assets/Audio/powerUps/clock.wav'},
 }
 
 # bonuses
 bonus_data =  {
-   'wrench':{'sound':'Assets/Audio/Fire.wav'},
-   'machine_gun':{'duration_time': 20, 'sound':'Assets/Audio/Fire.wav'},
-   'fortress_shield':{'duration_time': 10, 'sound':'Assets/Audio/Fire.wav'},
-   'bomb':{'duration_time': 1,'sound':'Assets/Audio/Fire.wav'}
+   'wrench':{'sound':'Assets/Audio/powerUps/wrench.wav'},
+   'machine_gun':{'duration_time': 15, 'sound':'Assets/Audio/powerUps/machine_gun.wav'},
+   'fortress_shield':{'duration_time': 20, 'sound':'Assets/Audio/powerUps/fortress_shield.wav'},
+   'bomb':{'duration_time': 1,'sound':'Assets/Audio/powerUps/bomb.wav'}
 }
 
 # structures
 estructure_data =  {
-   'fortress':{'health': 10},
+   'fortress':{'health': 5},
 }

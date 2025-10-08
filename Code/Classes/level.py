@@ -50,11 +50,11 @@ class Level:
 
         # Power uo setup
         self.last_power_up_time = pygame.time.get_ticks()
-        self.power_up_interval = 60 * 1000  # 1 minute in ms
+        self.power_up_interval = 10 * 1000  # 1 minute in ms
 
         # Bonuses setup
         self.last_bonues_time = pygame.time.get_ticks()
-        self.bonus_interval = 120 * 1000  # 2 minutes in ms
+        self.bonus_interval = 20 * 1000  # 2 minutes in ms
 
         # Fortress setup
         self.fortress_shield_applied = False
@@ -197,6 +197,9 @@ class Level:
                                 target_sprite.kill()
                                 bullet_sprite.explode_and_kill()
                                 break
+                        elif target_sprite.sprite_type == 'structure' and bullet_sprite.origin_type == 'enemy':
+                            target_sprite.get_damage(self.enemy, bullet_sprite.sprite_type)
+                            bullet_sprite.explode_and_kill()
 
                         elif target_sprite.sprite_type == 'player' and bullet_sprite.origin_type != 'player':
                             target_sprite.get_damage(self.enemy, bullet_sprite.sprite_type)
@@ -210,10 +213,6 @@ class Level:
                             bullet_sprite.explode_and_kill()
                         
                         elif target_sprite.sprite_type == 'barrier' and bullet_sprite.origin_type == 'player' or bullet_sprite.origin_type == 'enemy':
-                            bullet_sprite.explode_and_kill()
-
-                        elif target_sprite.sprite_type == 'structure' and bullet_sprite.origin_type == 'enemy':
-                            target_sprite.get_damage(self.player, bullet_sprite.sprite_type)
                             bullet_sprite.explode_and_kill()
 
     def spawn_power_up(self):

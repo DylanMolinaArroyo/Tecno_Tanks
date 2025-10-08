@@ -265,7 +265,7 @@ class Enemy(Entity):
         if self.target == "player" and self.create_bullet:
             self.create_bullet(self, self.bullet_speed)
 
-        elif self.target == "structure":
+        elif self.target == "structure" and self.create_bullet:
             self.create_bullet(self, self.bullet_speed)
 
         self.attack_time = pygame.time.get_ticks()
@@ -327,8 +327,7 @@ class Enemy(Entity):
             int: Damage value.
         """
 
-        damage = self.attack_damage
-        return damage
+        return self.attack_damage
     
     def get_grid_position(self):
         """
