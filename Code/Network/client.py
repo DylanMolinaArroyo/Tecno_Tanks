@@ -93,23 +93,31 @@ class NetworkClient:
                 'player': self.player_number
             })
     
-    def send_start_game(self, difficulty=None):
-        print(f"DEBUG client.py: send_start_game llamado - connected: {self.connected}, game_id: {self.game_id}")
-        if self.connected and self.game_id:
+    def send_start_game(self, difficulty, game_id=None):
+        """Envía al servidor el comando para iniciar el juego con la dificultad seleccionada"""
+        # Usar el game_id proporcionado o el almacenado
+        game_id_to_use = game_id if game_id else self.game_id
+        
+        print(f"🎮 [CLIENT DEBUG] send_start_game llamado:")
+        print(f"🎮 [CLIENT DEBUG] - connected: {self.connected}")
+        print(f"🎮 [CLIENT DEBUG] - game_id: {game_id_to_use}")
+        print(f"🎮 [CLIENT DEBUG] - difficulty: {difficulty}")
+        
+        if self.connected and game_id_to_use:
             message = {
-                'command': 'start_game',
-                'game_id': self.game_id
+                "command": "start_game",
+                "game_id": game_id_to_use,
+                "difficulty": difficulty
             }
-            if difficulty:
-                message['difficulty'] = difficulty
-            print(f"DEBUG client.py: Enviando mensaje: {message}")
             success = self.send_message(message)
-            print(f"DEBUG client.py: Mensaje enviado - éxito: {success}")
+            print(f"🎮 [CLIENT DEBUG] - Mensaje enviado: {success}")
             return success
         else:
-            print(f"DEBUG client.py: ERROR - No conectado o sin game_id")
+            print(f"❌ [CLIENT DEBUG] ERROR: No se puede enviar start_game")
+            print(f"❌ [CLIENT DEBUG] - Conectado: {self.connected}")
+            print(f"❌ [CLIENT DEBUG] - Game ID: {game_id_to_use}")
             return False
-    
+
     def send_message(self, message):
         if not self.connected or not self.socket:
             print("No hay conexión activa")
@@ -132,7 +140,7 @@ class NetworkClient:
     def receive_messages(self):
         while self.connected:
             try:
-                self.socket.settimeout(1.0)
+                self.socket.settimeout(10.0)  # Aumentar timeout a 10 segundos
                 data = self.socket.recv(4096)
                 if not data:
                     print("Servidor cerró la conexión")
@@ -150,6 +158,12 @@ class NetworkClient:
                 self.handle_message(message)
                 
             except socket.timeout:
+                # Enviar ping propio para mantener conexión activa
+                print("Timeout - enviando ping de mantenimiento...")
+                try:
+                    self.send_message({'command': 'ping'})
+                except:
+                    break
                 continue
             except ConnectionResetError:
                 print("Conexión reiniciada por el servidor")

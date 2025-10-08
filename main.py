@@ -225,30 +225,33 @@ class Game:
         menu_mouse_pos = pygame.mouse.get_pos()
 
         self.draw_text_with_outline(self.screen, "CREATING GAME...", self.get_font(80), "black", "white", (640, 200), outline_width=5)
-    
-    # Mantener conexión activa
+
+        # Mantener conexión activa - ENVIAR PING CADA 5 SEGUNDOS
         current_time = pygame.time.get_ticks()
-        if hasattr(self, 'last_ping_time') and current_time - self.last_ping_time > 5000:
+        if not hasattr(self, 'last_ping_time'):
+            self.last_ping_time = current_time
+        
+        if current_time - self.last_ping_time > 5000:  # 5 segundos
             if self.network_client.connected:
                 self.network_client.send_message({'command': 'ping'})
                 self.last_ping_time = current_time
 
         if not self.network_client.connected:
-        # Usar la IP configurada
+            # Usar la IP configurada
             if self.network_client.connect(self.server_ip, 5555, self.username_input):
                 self.network_client.create_game(self.username_input)
                 self.setup_network_handlers()
             else:
                 self.draw_text_with_outline(self.screen, "CONNECTION FAILED", self.get_font(60), "red", "white", (640, 300), outline_width=3)
                 self.draw_text_with_outline(self.screen, f"Server: {self.server_ip}", self.get_font(30), "red", "white", (640, 350), outline_width=2)
-    
+
         status = "Connected" if self.network_client.connected else "Disconnected"
         status_color = "black" if self.network_client.connected else "red"
         self.draw_text_with_outline(self.screen, f"Status: {status}", self.get_font(30), status_color, "white", (640, 400), outline_width=2)
         self.draw_text_with_outline(self.screen, f"Server: {self.server_ip}", self.get_font(25), "black", "white", (640, 450), outline_width=2)
         self.draw_text_with_outline(self.screen, f"User: {self.username_input}", self.get_font(25), "black", "white", (640, 500), outline_width=2)
-    
-    # Instrucción para continuar
+
+        # Instrucción para continuar
         if self.network_client.connected and self.game_code:
             self.draw_text_with_outline(self.screen, "Going to lobby...", self.get_font(25), "green", "white", (640, 570), outline_width=2)
 
@@ -273,26 +276,36 @@ class Game:
         # Mostrar información de conexión
         self.draw_text_with_outline(self.screen, f"Server: {self.server_ip}", self.get_font(25), "black", "white", (640, 400), outline_width=2)
         self.draw_text_with_outline(self.screen, f"User: {self.username_input}", self.get_font(25), "black", "white", (640, 450), outline_width=2)
-
+        
     def lobby_menu(self):
         self.screen.blit(self.bg_image, (0, 0))
         menu_mouse_pos = pygame.mouse.get_pos()
+        
+        # Mantener conexión activa en el lobby también
+        current_time = pygame.time.get_ticks()
+        if not hasattr(self, 'last_ping_time'):
+            self.last_ping_time = current_time
+        
+        if current_time - self.last_ping_time > 5000:  # 5 segundos
+            if self.network_client.connected:
+                self.network_client.send_message({'command': 'ping'})
+                self.last_ping_time = current_time
 
         self.draw_text_with_outline(self.screen, "LOBBY", self.get_font(100), "black", "white", (640, 200), outline_width=5)
         self.draw_text_with_outline(self.screen, f"Game Code: {self.game_code}", self.get_font(40), "black", "white", (640, 280), outline_width=3)
         self.draw_text_with_outline(self.screen, f"Players: {self.players_connected}/2", self.get_font(40), "black", "white", (640, 330), outline_width=3)
         self.draw_text_with_outline(self.screen, f"Username: {self.username_input}", self.get_font(30), "black", "white", (640, 380), outline_width=2)
 
-    # Mostrar estado de conexión
+        # Mostrar estado de conexión
         status_color = "green" if self.network_client.connected else "red"
         status_text = "CONNECTED" if self.network_client.connected else "DISCONNECTED"
         self.draw_text_with_outline(self.screen, f"Status: {status_text}", self.get_font(25), status_color, "white", (640, 430), outline_width=2)
 
-    # Mostrar estado del host/jugador
+        # Mostrar estado del host/jugador
         if self.is_host:
             self.draw_text_with_outline(self.screen, "Role: HOST", self.get_font(30), "green", "white", (640, 470), outline_width=2)
         
-        # Botón para iniciar juego (solo host)
+            # Botón para iniciar juego (solo host) - MODIFICADO PARA TESTING
             start_text = "START GAME" if self.players_connected == 2 else "WAITING FOR PLAYER..."
             self.start_game_button = Button(pos=(640, 550), 
                                         text_input=start_text, font=self.get_font(55), 
@@ -304,7 +317,7 @@ class Game:
         else:
             self.draw_text_with_outline(self.screen, "Role: PLAYER", self.get_font(30), "blue", "white", (640, 470), outline_width=2)
         
-        # Botón para marcar como listo (solo jugadores, no host)
+            # Botón para marcar como listo (solo jugadores, no host)
             if self.players_connected == 2:
                 ready_text = "READY"
                 self.ready_button = Button(pos=(640, 550), 
@@ -314,7 +327,7 @@ class Game:
                 self.ready_button.update(self.screen)
             else:
                 self.draw_text_with_outline(self.screen, "Waiting for host...", self.get_font(30), "black", "white", (640, 550), outline_width=2)
-    
+
         self.lobby_back_button.changeColor(menu_mouse_pos)
         self.lobby_back_button.update(self.screen)
 
@@ -361,12 +374,18 @@ class Game:
             self.player_number = message['player_number']
             self.is_host = True
             self.state = 'lobby'
+            
+            # IMPORTANTE: También establecer game_id en el network_client
+            self.network_client.game_id = self.game_code
             print(f"Game created: {self.game_code}")
 
         def handle_game_joined(message):
             self.game_code = message['game_id']
             self.player_number = message['player_number']
             self.state = 'lobby'
+            
+            # IMPORTANTE: También establecer game_id en el network_client
+            self.network_client.game_id = self.game_code
             print(f"Joined game: {self.game_code}")
 
         def handle_player_joined(message):
@@ -378,16 +397,23 @@ class Game:
             print("Player disconnected")
 
         def handle_game_started(message):
-            print(f"DEBUG: handle_game_started recibido - mensaje: {message}")
-            difficulty = message.get('difficulty', {
-                "name": "Multiplayer", 
-                "enemyTankType1": 15, 
-                "enemyTankType2": 15, 
-                "enemyTankType3": 10, 
-                "enemyTankType4": 5
-            })
+            print(f"🎮 DEBUG: handle_game_started RECIBIDO!")
+            print(f"🎮 DEBUG: Mensaje completo: {message}")
+            
+            # Asegurarnos de que tenemos una dificultad válida
+            difficulty = message.get('difficulty')
+            if not difficulty:
+                print("⚠️ DEBUG: No hay dificultad en el mensaje, usando default")
+                difficulty = {
+                    "name": "Multiplayer", 
+                    "enemyTankType1": 15, 
+                    "enemyTankType2": 15, 
+                    "enemyTankType3": 10, 
+                    "enemyTankType4": 5
+                }
+            
+            print(f"🎮 DEBUG: Dificultad establecida: {difficulty}")
             self.difficulty = difficulty
-            print(f"DEBUG: Dificultad establecida: {self.difficulty}")
             self.start_multiplayer_game()
 
         def handle_player_ready(message):
@@ -407,24 +433,28 @@ class Game:
         self.network_client.register_handler('join_failed', handle_join_failed)
 
     def start_multiplayer_game(self):
-        print("DEBUG: start_multiplayer_game llamado")
+        print("🎮 DEBUG: start_multiplayer_game llamado")
+        print(f"🎮 DEBUG: Dificultad recibida: {self.difficulty}")
+        print(f"🎮 DEBUG: Player number: {self.player_number}")
+        
         try:
+            # Siempre usar MultiplayerLevel
             from Code.Classes.multiplayer_level import MultiplayerLevel
-            print(f"DEBUG: Importando MultiplayerLevel...")
-            self.multiplayer_level = MultiplayerLevel(
+            print("🎮 DEBUG: Creando MultiplayerLevel...")
+            
+            self.level = MultiplayerLevel(
                 self.difficulty, 
                 self.network_client, 
                 self.player_number
             )
+            
             self.state = 'play'
-            print(f"DEBUG: Estado cambiado a 'play', multiplayer_level creado")
-        except ImportError as e:
-            print(f"DEBUG: Error importando MultiplayerLevel: {e}")
-            print("DEBUG: Usando Level normal...")
-            self.level = Level(self.difficulty)
-            self.state = 'play'
+            print("🎮 DEBUG: Juego multiplayer iniciado - estado cambiado a 'play'")
+            
         except Exception as e:
-            print(f"DEBUG: Error en start_multiplayer_game: {e}")
+            print(f"❌ ERROR crítico en start_multiplayer_game: {e}")
+            import traceback
+            traceback.print_exc()
             self.state = 'lobby'
 
     def select_difficulty_menu(self):
@@ -469,27 +499,50 @@ class Game:
                     self.state = 'play'
 
     def play(self):
-        if not self.level:
-            try:
-                self.level = Level(self.difficulty)  
-            except Exception as e:
-                print(f"Error creating level: {e}")
-                self.state = 'choose'
-                return
+        try:
+            # Si es multiplayer, usar la lógica de multiplayer
+            if hasattr(self.level, 'player_number'):
+                # Lógica para multiplayer
+                result = self.level.run()
                 
-        self.level.run()
-        
-        if self.level.player.health <= 0:
-            self.win = False
-            self.state = 'end'
-        
-        elif self.level.structure.destroyed:
-            self.win = False
-            self.state = 'end'
+                if result == 'win':
+                    self.win = True
+                    self.state = 'end'
+                elif result == 'lose':
+                    self.win = False
+                    self.state = 'end'
+                elif result == 'menu':
+                    self.state = 'menu'
+                    
+            else:
+                # Lógica original para single player
+                if not self.level:
+                    try:
+                        self.level = Level(self.difficulty)  
+                    except Exception as e:
+                        print(f"Error creating level: {e}")
+                        self.state = 'choose'
+                        return
+                        
+                self.level.run()
+                
+                if self.level.player.health <= 0:
+                    self.win = False
+                    self.state = 'end'
+                
+                elif self.level.structure.destroyed:
+                    self.win = False
+                    self.state = 'end'
 
-        elif self.level.all_enemies_defeated() and not self.level.enemy_queue and not self.level.enemies:
-            self.win = True
-            self.state = 'end'
+                elif self.level.all_enemies_defeated() and not self.level.enemy_queue and not self.level.enemies:
+                    self.win = True
+                    self.state = 'end'
+                    
+        except Exception as e:
+            print(f"❌ ERROR en juego: {e}")
+            import traceback
+            traceback.print_exc()
+            self.state = 'choose'
 
     def end_menu(self):
         """
@@ -536,7 +589,7 @@ class Game:
                 else:
                     if len(self.username_input) < 15:
                         self.username_input += event.unicode
-
+    
     def check_events(self):
         """
         Processes all Pygame events, updates game state, and handles button clicks for all menus.
@@ -602,10 +655,23 @@ class Game:
                 
                 elif self.state == 'lobby':
                     if self.is_host and hasattr(self, 'start_game_button') and self.start_game_button.checkForInput(mouse_pos) and self.players_connected == 2:
-                        # Host va a seleccionar dificultad
-                        self.state = 'multiplayer_difficulty'
+                        # MODIFICACIÓN PARA TESTING - Iniciar directamente con dificultad media
+                        multiplayer_difficulties = {
+                            "medium": {"name": "Medium", "enemyTankType1": 12, "enemyTankType2": 12, "enemyTankType3": 10, "enemyTankType4": 6}
+                        }
+                        self.difficulty = multiplayer_difficulties["medium"]
+                        print("🎮 DEBUG: Host iniciando juego directamente con dificultad media...")
+                        print(f"🎮 DEBUG: Network client connected: {self.network_client.connected}")
+                        print(f"🎮 DEBUG: Game code: {self.game_code}")
+                        
+                        # Enviar comando de inicio al servidor
+                        #success = self.network_client.send_start_game(self.difficulty)
+                        success = self.network_client.send_start_game(self.difficulty, self.game_code)
+                        print(f"🎮 DEBUG: Comando start_game enviado - éxito: {success}")
+                        
                     elif not self.is_host and self.players_connected == 2 and hasattr(self, 'ready_button') and self.ready_button.checkForInput(mouse_pos):
                         # Jugador marca como listo
+                        print("🎮 DEBUG: Jugador marcándose como listo...")
                         self.network_client.send_player_ready()
                     elif self.lobby_back_button.checkForInput(mouse_pos):
                         self.state = 'multiplayer_menu'
@@ -619,11 +685,11 @@ class Game:
                         "medium": {"name": "Medium", "enemyTankType1": 12, "enemyTankType2": 12, "enemyTankType3": 10, "enemyTankType4": 6},
                         "hard": {"name": "Hard", "enemyTankType1": 10, "enemyTankType2": 10, "enemyTankType3": 12, "enemyTankType4": 8}
                     }
-    
+
                     if self.multiplayer_easy_button.checkForInput(mouse_pos):
                         self.difficulty = multiplayer_difficulties["easy"]
-                        print(f"DEBUG: Botón EASY presionado, enviando start_game...")
-                        print(f"DEBUG - Estado antes de enviar: connected={self.network_client.connected}, game_id={self.game_code}")
+                        print(f"🎮 DEBUG: Botón EASY presionado, enviando start_game...")
+                        print(f"🎮 DEBUG - Estado antes de enviar: connected={self.network_client.connected}, game_id={self.game_code}")
                         self.network_client.send_start_game(self.difficulty)  # Enviar dificultad
                         print("Host selected Easy difficulty")
                     elif self.multiplayer_medium_button.checkForInput(mouse_pos):
