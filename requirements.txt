@@ -1,1 +1,9 @@
 pygame
+supabase 
+psycopg2
+uuid
+socket
+threading
+pickle
+time
+os
