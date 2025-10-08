@@ -1,8 +1,8 @@
-# 🧩 Documentación Técnica — Tank 1990: Retro Distributed Battle
+# Documentación Técnica — Tank 1990: Retro Distributed Battle
 
 ## 1. Descripción General
 
-**Tank 1990: Retro Distributed Battle** es una reinterpretación moderna del clásico *Battle City (Tank 1990)*, desarrollada en **Python** utilizando la librería **Pygame**.
+**Tecno Tanks** es una reinterpretación moderna del clásico *Battle City (Tank 1990)*, desarrollada en **Python** utilizando la librería **Pygame**.
 El proyecto tiene como propósito ofrecer una experiencia práctica para la aplicación de conceptos de **Sistemas Operativos** y **Sistemas Distribuidos**, integrando la **gestión de procesos**, **sincronización**, **comunicación entre hilos** y **control de recursos en tiempo real**.
 
 El enfoque del desarrollo combina la jugabilidad retro con un diseño técnico avanzado, implementando concurrencia, control de acceso a recursos compartidos y comunicación en red cliente-servidor.
@@ -31,21 +31,21 @@ Cada jugador ejecuta un cliente Pygame que se comunica con un **servidor central
 
 ### 2.2 Componentes Principales
 
-#### 🕹️ Cliente (Juego Pygame)
+#### Cliente (Juego Pygame)
 
 * Renderiza gráficos, animaciones y efectos visuales.
 * Captura entradas del usuario (movimiento, disparo, interacción).
 * Envía eventos al servidor (movimiento, ataque, destrucción).
 * Actualiza el entorno local según los mensajes recibidos.
 
-#### 🧠 Servidor
+#### Servidor
 
 * Gestiona el **estado global del juego**.
 * Sincroniza posiciones, colisiones y eventos entre jugadores.
 * Controla las **variables compartidas** y mantiene la consistencia del entorno.
 * Supervisa los procesos de conexión, desconexión y sincronización de jugadores.
 
-#### 📦 Recursos
+#### Recursos
 
 * **Sprites y sonidos:** almacenados en la carpeta `/Assets/`.
 * **Mapas CSV:** definen el terreno, muros, pasto, barreras y fortaleza.
@@ -53,13 +53,13 @@ Cada jugador ejecuta un cliente Pygame que se comunica con un **servidor central
 
 ### 2.3 Principios de Sistemas Operativos Aplicados
 
-El proyecto demuestra conceptos fundamentales de sistemas operativos y distribuidos:
+El proyecto tiene como objetivo demostrar conceptos fundamentales de sistemas operativos y distribuidos:
 
 * **Gestión de procesos y estados:** tanques y proyectiles se ejecutan como procesos con estados (activo, destruido, respawn).
 * **Sincronización de hilos:** control concurrente de animaciones, colisiones y disparos.
 * **Variables compartidas:** estado global del mapa y recursos sincronizados.
 * **Planificación y asignación de recursos:** control de acceso al CPU y tiempos de actualización.
-* **Comunicación distribuida:** mensajes entre clientes y servidor mediante **sockets TCP**.
+* **Comunicación distribuida:** mensajes entre clientes y servidor mediante **web sockets**.
 * **Monitoreo y tolerancia a la latencia:** ajustes de renderizado frente al retardo de red.
 
 ---
@@ -77,8 +77,8 @@ El proyecto demuestra conceptos fundamentales de sistemas operativos y distribui
 
 ```bash
 # Clonar el repositorio
-git clone https://github.com/usuario/tank1990.git
-cd tank1990
+git clone https://github.com/DylanMA1/ProyectoSO1.git
+cd ProyectoSO1
 
 # Crear entorno virtual
 python -m venv venv
@@ -87,7 +87,15 @@ python -m venv venv
 # En Windows:
 venv\Scripts\activate
 # En Linux / macOS:
+
+# Si usas bash o zsh:
 source venv/bin/activate
+
+# Si usas fish:
+source venv/bin/activate.fish
+
+# Si usas csh o tcsh:
+source venv/bin/activate.csh
 
 # Instalar dependencias
 pip install -r requirements.txt
@@ -145,12 +153,13 @@ Los clientes se conectan automáticamente al servidor y sincronizan el estado gl
 ## 6. Consideraciones Técnicas
 
 * Motor de renderizado **Pygame**: 60 FPS por defecto.
-* Comunicación en red mediante **sockets TCP** y paquetes **JSON**.
+* Comunicación en red mediante **Web Sockets** y paquetes **JSON**.
 * Agrupación de sprites:
 
   * `visible_sprites`
   * `attackable_sprites`
   * `obstacle_sprites`
+    
 * Mapa basado en archivos CSV (`-1` representa espacio vacío).
 * Soporte para destrucción de la fortaleza, sincronización de barreras y control de colisiones distribuidas.
 
@@ -158,11 +167,11 @@ Los clientes se conectan automáticamente al servidor y sincronizan el estado gl
 
 ## 7. Conclusión
 
-**Tank 1990: Retro Distributed Battle** combina diseño de videojuegos con conceptos avanzados de **programación concurrente** y **sistemas distribuidos**.
+**Tecno Tanks** combina diseño de videojuegos con conceptos avanzados de **programación concurrente** y **sistemas distribuidos**.
 El proyecto demuestra cómo integrar **procesos**, **hilos**, **comunicación TCP** y **sincronización de recursos** dentro de un entorno interactivo y educativo, ofreciendo una experiencia que une teoría y práctica de manera lúdica.
 
 ---
 
-📄 **Autor:** [Tu nombre o equipo]
+📄 **Autor:** Dylan Molina, Fabricio ALfaro
 📆 **Versión:** 1.0.0
 🔗 **Licencia:** MIT
