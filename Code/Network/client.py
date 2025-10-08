@@ -11,9 +11,12 @@ class NetworkClient:
         self.player_number = None
         self.message_handlers = {}
         self.receive_thread = None
+        self.username = "Player"  # Añadir nombre de jugador
         
-    def connect(self, host='localhost', port=5555):
+    def connect(self, host='0.0.0.0', port=5555, username="Player"):
         try:
+            self.username = username
+            
             # Crear nuevo socket si no existe o está cerrado
             if self.socket:
                 try:
@@ -22,7 +25,7 @@ class NetworkClient:
                     pass
                     
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.socket.settimeout(5.0)  # Timeout para conexión
+            self.socket.settimeout(5.0)
             self.socket.connect((host, port))
             self.connected = True
             
@@ -31,7 +34,7 @@ class NetworkClient:
             self.receive_thread.daemon = True
             self.receive_thread.start()
             
-            print(f"Conectado al servidor {host}:{port}")
+            print(f"Conectado al servidor {host}:{port} como {username}")
             return True
             
         except socket.timeout:
@@ -44,18 +47,32 @@ class NetworkClient:
             print(f"Error conectando al servidor: {e}")
             return False
     
-    def create_game(self):
+    def create_game(self, username="Player"):
         if self.connected:
-            self.send_message({'command': 'create_game'})
+            self.send_message({
+                'command': 'create_game', 
+                'username': username
+            })
         else:
             print("No conectado al servidor")
     
-    def join_game(self, game_id):
+    def join_game(self, game_id, username="Player"):
         if self.connected:
             self.game_id = game_id
-            self.send_message({'command': 'join_game', 'game_id': game_id})
+            self.send_message({
+                'command': 'join_game', 
+                'game_id': game_id, 
+                'username': username
+            })
         else:
             print("No conectado al servidor")
+    
+    def send_player_ready(self):
+        if self.connected and self.game_id:
+            self.send_message({
+                'command': 'player_ready',
+                'game_id': self.game_id
+            })
     
     def send_game_state(self, game_state):
         if self.connected and self.game_id:
@@ -65,23 +82,43 @@ class NetworkClient:
                 'game_state': game_state
             })
     
-    def send_player_action(self, action):
+    def send_player_action(self, action_type, action_data):
+        """Envía acciones del jugador (movimiento, disparos, etc.)"""
         if self.connected and self.game_id and self.player_number:
             self.send_message({
                 'command': 'player_action',
                 'game_id': self.game_id,
-                'action': action,
+                'action_type': action_type,
+                'action_data': action_data,
                 'player': self.player_number
             })
+    
+    def send_start_game(self, difficulty=None):
+        print(f"DEBUG client.py: send_start_game llamado - connected: {self.connected}, game_id: {self.game_id}")
+        if self.connected and self.game_id:
+            message = {
+                'command': 'start_game',
+                'game_id': self.game_id
+            }
+            if difficulty:
+                message['difficulty'] = difficulty
+            print(f"DEBUG client.py: Enviando mensaje: {message}")
+            success = self.send_message(message)
+            print(f"DEBUG client.py: Mensaje enviado - éxito: {success}")
+            return success
+        else:
+            print(f"DEBUG client.py: ERROR - No conectado o sin game_id")
+            return False
     
     def send_message(self, message):
         if not self.connected or not self.socket:
             print("No hay conexión activa")
             return False
-            
+        
         try:
             data = pickle.dumps(message)
             self.socket.send(data)
+            print(f"Mensaje enviado: {message}")  # DEBUG
             return True
         except BrokenPipeError:
             print("Error: Conexión perdida con el servidor")
@@ -95,7 +132,6 @@ class NetworkClient:
     def receive_messages(self):
         while self.connected:
             try:
-                # Configurar timeout para poder verificar si aún estamos conectados
                 self.socket.settimeout(1.0)
                 data = self.socket.recv(4096)
                 if not data:
@@ -103,11 +139,17 @@ class NetworkClient:
                     break
                     
                 message = pickle.loads(data)
-                print(f"Mensaje recibido: {message}")  # Debug
+                print(f"Mensaje recibido del servidor: {message}")  # DEBUG
+                
+                # Manejar ping del servidor
+                if message.get('type') == 'ping':
+                    print("Ping recibido, enviando pong...")
+                    self.send_message({'command': 'pong'})
+                    continue
+                    
                 self.handle_message(message)
                 
             except socket.timeout:
-                # Timeout normal, continuar escuchando
                 continue
             except ConnectionResetError:
                 print("Conexión reiniciada por el servidor")
@@ -121,7 +163,7 @@ class NetworkClient:
     
     def handle_message(self, message):
         message_type = message.get('type')
-        print(f"Manejando mensaje tipo: {message_type}")  # Debug
+        print(f"Manejando mensaje tipo: {message_type}")
         if message_type in self.message_handlers:
             self.message_handlers[message_type](message)
         else:
