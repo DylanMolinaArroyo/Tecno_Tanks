@@ -116,12 +116,6 @@ Ejecutar el servidor en la nube o en otra máquina local:
 python server.py
 ```
 
-Ejecutar los clientes en diferentes equipos o terminales:
-
-```bash
-python main.py --connect <IP_SERVIDOR>
-```
-
 Los clientes se conectan automáticamente al servidor y sincronizan el estado global del juego (mapa, tanques, colisiones, etc.).
 
 ---
