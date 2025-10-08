@@ -116,7 +116,7 @@ Ejecutar el servidor en la nube o en otra máquina local:
 python server.py
 ```
 
-Los clientes se conectan automáticamente al servidor y sincronizan el estado global del juego (mapa, tanques, colisiones, etc.).
+Los clientes requieren agregar la IP del servidor en la pantalla "Settings" para conectarse y sincronizar el estado global del juego (mapa, tanques, colisiones, etc.).
 
 ---
 
