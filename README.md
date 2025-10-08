@@ -1,4 +1,4 @@
-# Documentación Técnica — Tank 1990: Retro Distributed Battle
+# Documentación Técnica — Tecno Tanks
 
 ## 1. Descripción General
 
