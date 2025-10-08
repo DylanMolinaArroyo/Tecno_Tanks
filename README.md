@@ -1,150 +1,168 @@
-# 🧩 Documentación Técnica del Proyecto
+# 🧩 Documentación Técnica — Tank 1990: Retro Distributed Battle
 
-## 1. Arquitectura del Sistema
+## 1. Descripción General
 
-### 1.1 Descripción general
+**Tank 1990: Retro Distributed Battle** es una reinterpretación moderna del clásico *Battle City (Tank 1990)*, desarrollada en **Python** utilizando la librería **Pygame**.
+El proyecto tiene como propósito ofrecer una experiencia práctica para la aplicación de conceptos de **Sistemas Operativos** y **Sistemas Distribuidos**, integrando la **gestión de procesos**, **sincronización**, **comunicación entre hilos** y **control de recursos en tiempo real**.
 
-Este proyecto sigue una arquitectura basada en el modelo **cliente-servidor**, con una separación clara entre el frontend, el backend y la base de datos.
-El objetivo principal del sistema es ofrecer una plataforma interactiva, escalable y mantenible para la gestión y visualización de datos, integrando servicios externos y autenticación segura.
-
-### 1.2 Diagrama de arquitectura
-
-```
-[ Cliente / Frontend ]
-        ↓
-   (API REST / GraphQL)
-        ↓
-[ Servidor / Backend ]
-        ↓
-[ Base de datos / Servicios externos ]
-```
-
-### 1.3 Componentes principales
-
-#### 🖥️ Frontend
-
-* Framework: **React / React Native / Pygame** (dependiendo del módulo)
-* Estilos: **TailwindCSS**
-* Funcionalidad principal: interfaz interactiva, manejo de estado y comunicación con la API
-
-#### ⚙️ Backend
-
-* Tecnología: **Flask / Node.js / Django** (según implementación)
-* Función: exposición de endpoints RESTful, validación de datos y conexión con la base de datos
-
-#### 🗄️ Base de datos
-
-* Motor: **PostgreSQL** (principal)
-* Propósito: almacenamiento persistente de datos estructurados
-* Hosting: **Supabase / Render / AWS RDS**
-
-#### 🔐 Servicios externos
-
-* **Firebase**: autenticación de usuarios
-* **Supabase / AWS**: hosting y despliegue de backend y base de datos
-* **APIs externas**: integración con servicios de terceros (según el módulo)
-
-### 1.4 Flujo de datos
-
-1. El usuario interactúa con el frontend (por ejemplo, React).
-2. El frontend envía solicitudes HTTP al backend a través de una **API REST**.
-3. El backend procesa la solicitud, accede a la base de datos y devuelve una respuesta JSON.
-4. El frontend actualiza la interfaz con los nuevos datos.
-5. Servicios externos como Firebase o Supabase intervienen en la autenticación o almacenamiento.
+El enfoque del desarrollo combina la jugabilidad retro con un diseño técnico avanzado, implementando concurrencia, control de acceso a recursos compartidos y comunicación en red cliente-servidor.
 
 ---
 
-## 2. Instalación
+## 2. Arquitectura del Sistema
 
-### 2.1 Requisitos previos
+### 2.1 Estructura General
 
-* **Sistema operativo:** Windows / macOS / Linux
-* **Lenguaje:** Python 3.10+ o Node.js 18+
-* **Dependencias:** `pip`, `npm`, o `yarn` según el stack utilizado
-* **Base de datos:** PostgreSQL (opcional si se usa Supabase)
+La arquitectura sigue un modelo **cliente-servidor distribuido**.
+Cada jugador ejecuta un cliente Pygame que se comunica con un **servidor central** para mantener sincronizado el estado del juego (posiciones, disparos, colisiones y destrucción de estructuras).
 
-### 2.2 Pasos de instalación
+```
++------------------+        Internet        +--------------------+
+|   Cliente 1      |  <------------------>  |   Servidor Central |
+| (Pygame local)   |                       | (Control lógico)    |
++------------------+                       +--------------------+
+        ↑                                           ↓
+        |                                           |
++------------------+                        +------------------+
+|   Cliente 2      |                        |   Cliente N      |
+| (Pygame local)   |                        | (Pygame local)   |
++------------------+                        +------------------+
+```
+
+### 2.2 Componentes Principales
+
+#### 🕹️ Cliente (Juego Pygame)
+
+* Renderiza gráficos, animaciones y efectos visuales.
+* Captura entradas del usuario (movimiento, disparo, interacción).
+* Envía eventos al servidor (movimiento, ataque, destrucción).
+* Actualiza el entorno local según los mensajes recibidos.
+
+#### 🧠 Servidor
+
+* Gestiona el **estado global del juego**.
+* Sincroniza posiciones, colisiones y eventos entre jugadores.
+* Controla las **variables compartidas** y mantiene la consistencia del entorno.
+* Supervisa los procesos de conexión, desconexión y sincronización de jugadores.
+
+#### 📦 Recursos
+
+* **Sprites y sonidos:** almacenados en la carpeta `/Assets/`.
+* **Mapas CSV:** definen el terreno, muros, pasto, barreras y fortaleza.
+* **Archivo `requirements.txt`:** lista las dependencias del proyecto.
+
+### 2.3 Principios de Sistemas Operativos Aplicados
+
+El proyecto demuestra conceptos fundamentales de sistemas operativos y distribuidos:
+
+* **Gestión de procesos y estados:** tanques y proyectiles se ejecutan como procesos con estados (activo, destruido, respawn).
+* **Sincronización de hilos:** control concurrente de animaciones, colisiones y disparos.
+* **Variables compartidas:** estado global del mapa y recursos sincronizados.
+* **Planificación y asignación de recursos:** control de acceso al CPU y tiempos de actualización.
+* **Comunicación distribuida:** mensajes entre clientes y servidor mediante **sockets TCP**.
+* **Monitoreo y tolerancia a la latencia:** ajustes de renderizado frente al retardo de red.
+
+---
+
+## 3. Instalación
+
+### 3.1 Requisitos Previos
+
+* **Python:** 3.10 o superior
+* **Pip:** gestor de paquetes de Python
+* **Sistemas compatibles:** Windows, Linux o macOS
+* **Conexión a Internet:** requerida para modo en línea
+
+### 3.2 Pasos de Instalación
 
 ```bash
-# 1. Clonar el repositorio
-git clone https://github.com/usuario/proyecto.git
-cd proyecto
+# Clonar el repositorio
+git clone https://github.com/usuario/tank1990.git
+cd tank1990
 
-# 2. Crear entorno virtual (si usa Python)
+# Crear entorno virtual
 python -m venv venv
-source venv/bin/activate   # Linux / macOS
-venv\Scripts\activate      # Windows
 
-# 3. Instalar dependencias
-pip install -r requirements.txt      # Si es backend Python
-npm install                          # Si es frontend React
+# Activar entorno virtual
+# En Windows:
+venv\Scripts\activate
+# En Linux / macOS:
+source venv/bin/activate
 
-# 4. Configurar variables de entorno
-cp .env.example .env
-# Editar .env con credenciales y claves API
+# Instalar dependencias
+pip install -r requirements.txt
 
-# 5. Ejecutar pruebas básicas
-npm run dev          # Para frontend
-python app.py        # Para backend
+# Verificar instalación de Pygame
+python -m pygame.examples.aliens
 ```
 
-### 2.3 Configuración
-
-* Crear archivo `.env` con las siguientes variables:
-
-  ```
-  DATABASE_URL=postgresql://user:password@localhost:5432/nombre_db
-  FIREBASE_API_KEY=tu_clave
-  SUPABASE_URL=https://tu-proyecto.supabase.co
-  SUPABASE_KEY=tu_clave_api
-  ```
+Si aparece una ventana de prueba, la instalación fue exitosa.
 
 ---
 
-## 3. Despliegue
+## 4. Despliegue y Ejecución
 
-### 3.1 Entorno de despliegue
+### 4.1 Modo Local (Offline)
 
-El sistema puede desplegarse en:
-
-* **Render / Supabase** para backend y base de datos
-* **Vercel / Netlify / Expo** para frontend
-* **Docker** (opcional) para ejecución en contenedores
-
-### 3.2 Pasos de despliegue
+Ejecutar el juego de manera individual:
 
 ```bash
-# Crear build de producción
-npm run build
-
-# Desplegar en Supabase o Render
-supabase deploy
-# o
-git push render main
-
-# Iniciar servidor
-npm start
-# o
-python app.py
+python main.py
 ```
 
-### 3.3 Verificación del sistema
+### 4.2 Modo Distribuido (Online)
 
-* Revisar logs del servidor:
+Ejecutar el servidor en la nube o en otra máquina local:
 
-  ```bash
-  docker logs -f nombre_contenedor
-  ```
-* Comprobar endpoint de salud:
+```bash
+python server.py
+```
 
-  ```bash
-  curl https://miapp.supabase.co/health
-  ```
-* Verificar acceso desde el navegador:
-  👉 [https://miapp.vercel.app](https://miapp.vercel.app)
+Ejecutar los clientes en diferentes equipos o terminales:
+
+```bash
+python main.py --connect <IP_SERVIDOR>
+```
+
+Los clientes se conectan automáticamente al servidor y sincronizan el estado global del juego (mapa, tanques, colisiones, etc.).
+
+---
+
+## 5. Descripción del Entorno y Recursos
+
+| Carpeta / Archivo    | Descripción                                                   |
+| -------------------- | ------------------------------------------------------------- |
+| **Assets/**          | Sprites, sonidos y mapas del juego                            |
+| **Code/**            | Código fuente principal                                       |
+| **Code/Entities/**   | Clases de entidades (Jugador, Enemigo, Proyectil, Estructura) |
+| **Code/Utilities/**  | Configuración general y funciones utilitarias                 |
+| **requirements.txt** | Dependencias del proyecto                                     |
+| **main.py**          | Cliente principal del juego                                   |
+| **server.py**        | Lógica de sincronización en red                               |
+
+---
+
+## 6. Consideraciones Técnicas
+
+* Motor de renderizado **Pygame**: 60 FPS por defecto.
+* Comunicación en red mediante **sockets TCP** y paquetes **JSON**.
+* Agrupación de sprites:
+
+  * `visible_sprites`
+  * `attackable_sprites`
+  * `obstacle_sprites`
+* Mapa basado en archivos CSV (`-1` representa espacio vacío).
+* Soporte para destrucción de la fortaleza, sincronización de barreras y control de colisiones distribuidas.
+
+---
+
+## 7. Conclusión
+
+**Tank 1990: Retro Distributed Battle** combina diseño de videojuegos con conceptos avanzados de **programación concurrente** y **sistemas distribuidos**.
+El proyecto demuestra cómo integrar **procesos**, **hilos**, **comunicación TCP** y **sincronización de recursos** dentro de un entorno interactivo y educativo, ofreciendo una experiencia que une teoría y práctica de manera lúdica.
 
 ---
 
 📄 **Autor:** [Tu nombre o equipo]
 📆 **Versión:** 1.0.0
-🔗 **Licencia:** MIT / GPL / Apache 2.0 (según corresponda)
+🔗 **Licencia:** MIT
