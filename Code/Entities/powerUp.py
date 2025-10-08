@@ -2,8 +2,22 @@ import pygame
 from Code.Utilities.settings import TILESIZE
 from random import randint
 
+
 class PowerUp(pygame.sprite.Sprite):
+    """
+    Represents a collectible power-up entity in the game. Inherits from pygame.sprite.Sprite.
+    """ 
+    
     def __init__(self, power_type, pos, groups, data):
+        """
+        Initializes a PowerUp sprite.
+
+        power_type: The type of power-up (e.g., 'shield', 'wrench').
+        pos: The (x, y) position to place the power-up.
+        groups: Sprite groups to add this power-up to.
+        data: Dictionary containing power-up properties (e.g., duration, sound).
+        """
+
         super().__init__(groups)
         self.sprite_type = "powerup"
         self.power_type = power_type
@@ -13,7 +27,14 @@ class PowerUp(pygame.sprite.Sprite):
         self.hitbox = self.rect.inflate(-10, -10)
 
     def apply_effect(self, player):
+        """
+        Applies the power-up effect to the given player.
 
+        Activates the corresponding effect based on power_type.
+        Plays a sound effect if specified in data.
+        Removes the power-up from all sprite groups after applying the effect.
+        """
+        
         match self.power_type:
             case 'shield':
                 player.activate_shield(self.data["duration_time"])
@@ -30,7 +51,6 @@ class PowerUp(pygame.sprite.Sprite):
             case 'bomb':
                 player.bomb_everyone(self.data["duration_time"])
         
-        # sonido del power up
         if "sound" in self.data:
             sound = pygame.mixer.Sound(self.data["sound"])
             sound.play()

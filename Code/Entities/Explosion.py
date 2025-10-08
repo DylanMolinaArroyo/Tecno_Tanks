@@ -3,6 +3,15 @@ import os
 
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, pos, groups, folder_path="Assets/Effects/Circle_explosion"):
+        """
+        Initializes an explosion effect at the given position.
+
+        Args:
+            pos (tuple): (x, y) position for the explosion center.
+            groups (list): Sprite groups to add this explosion to.
+            folder_path (str): Path to the folder containing explosion frames.
+        """
+
         super().__init__(groups)
         self.sprite_type = 'explosion'
 
@@ -20,6 +29,10 @@ class Explosion(pygame.sprite.Sprite):
         self.animation_speed = 0.2
 
     def update(self):
+        """
+        Updates the explosion animation frame and removes the sprite when finished.
+        """
+        
         self.frame_index += self.animation_speed
         if self.frame_index >= len(self.frames):
             self.kill()

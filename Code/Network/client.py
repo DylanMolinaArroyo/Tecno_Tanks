@@ -14,6 +14,7 @@ class NetworkClient:
         self.username = "Player"  # Añadir nombre de jugador
         
     def connect(self, host='0.0.0.0', port=5555, username="Player"):
+    def connect(self, host='172.24.77.96', port=5555):
         try:
             self.username = username
             

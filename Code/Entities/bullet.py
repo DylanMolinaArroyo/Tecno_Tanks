@@ -4,6 +4,17 @@ from Code.Entities.Explosion import Explosion
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, entity, tile_sprites, groups, bullet_speed, all_sprites_group=None):
+        """
+        Initializes a bullet object.
+
+        Args:
+            entity: The entity firing the bullet (player or enemy).
+            tile_sprites: Group of tile sprites for collision.
+            groups: Sprite groups to add this bullet to.
+            bullet_speed (float): Speed of the bullet.
+            all_sprites_group: Optional group for explosion effect.
+        """
+                
         super().__init__(groups)
 
         self.sprite_type = 'bullet'
@@ -40,10 +51,18 @@ class Bullet(pygame.sprite.Sprite):
         self.tile_sprites = tile_sprites
 
     def explode_and_kill(self):
+        """
+        Creates an explosion effect and removes the bullet from all groups.
+        """
+
         if self.all_sprites_group:
             Explosion(self.rect.center, [self.all_sprites_group])
         self.kill()
 
     def update(self):
+        """
+        Updates the bullet's position based on its direction and speed.
+        """
+
         self.rect.x += self.direction.x * self.speed
         self.rect.y += self.direction.y * self.speed

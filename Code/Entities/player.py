@@ -5,6 +5,16 @@ from Code.Functions.support import import_folder
 
 class Player(Entity):
     def __init__(self, pos, groups, obstacle_sprites, create_bullet):
+        """
+        Initializes the player entity, sets up graphics, movement, stats, power-ups, and sounds.
+
+        Args:
+            pos (tuple): (x, y) position to spawn the player.
+            groups (list): Sprite groups to add this player to.
+            obstacle_sprites (pygame.sprite.Group): Group of obstacle sprites for collision.
+            create_bullet (callable): Function to create bullets.
+        """
+
         super().__init__(groups)
 
         self.sprite_type = 'player'
@@ -78,6 +88,10 @@ class Player(Entity):
         self.sounds['hit_sound'].set_volume(0.4)
 
     def import_player_assets(self):
+        """
+        Loads player animation frames for all directions and idle states.
+        """
+
         character_path = 'Assets/Entities/Player/'
         self.animations = {'up': [], 'down': [], 'left': [], 'right': [],
                            'up_idle': [], 'down_idle': [], 'left_idle': [], 'right_idle': []}
@@ -87,6 +101,10 @@ class Player(Entity):
             self.animations[animation] = import_folder(full_path)
 
     def input(self):
+        """
+        Handles keyboard input for movement and attacking.
+        """
+
         keys = pygame.key.get_pressed()
 
         # Movement input
@@ -116,12 +134,20 @@ class Player(Entity):
             self.sounds['attack_sound'].play()
 
     def get_status(self):
+        """
+        Updates the player's status to idle if not moving.
+        """
+
         # Idle status
         if self.direction.x == 0 and self.direction.y == 0:
             if 'idle' not in self.status and 'attack' not in self.status:
                 self.status = self.status + '_idle'
 
     def cooldowns(self):
+        """
+        Manages attack and invulnerability cooldown timers.
+        """
+       
         current_time = pygame.time.get_ticks()
         if self.attacking:
             if current_time - self.attack_time >= self.attack_cooldown:
@@ -131,6 +157,10 @@ class Player(Entity):
                 self.vulnerable = True
 
     def animate(self):
+        """
+        Updates the player's animation frame and applies visual effects for power-ups and damage.
+        """
+
         animation = self.animations[self.status]
 
         # Loop over the frame index
@@ -138,24 +168,24 @@ class Player(Entity):
         if self.frame_index >= len(animation):
             self.frame_index = 0
 
-        # Reiniciar imagen base en cada frame
+        # Reset base image on each frame
         base_image = animation[int(self.frame_index)].copy()
         self.rect = base_image.get_rect(center=self.hitbox.center)
 
-        # Damage shoot boost → rojo
+        # Damage shoot boost → red
         if self.shoot_upgrade_active:
             base_image.fill((255, 0, 0), special_flags=pygame.BLEND_RGB_ADD)
         
-        # Machine gun → naranja
+        # Machine gun → orange
         if self.machine_gun_active:
             base_image.fill((255, 155, 0), special_flags=pygame.BLEND_RGB_ADD)
 
-        # Escudo → overlay
+        # Shield → overlay
         if self.shield_active:
             shield_scaled = pygame.transform.scale(self.shield_image, base_image.get_size())
             base_image.blit(shield_scaled, (0, 0))
 
-        # Parpadeo al recibir daño
+        # Blinking when taking damage
         if not self.vulnerable:
             alpha = self.wave_value()
             base_image.set_alpha(alpha)
@@ -166,9 +196,24 @@ class Player(Entity):
 
 
     def return_damage(self):
+        """
+        Returns the player's current damage value.
+
+        Returns:
+            int: Damage value.
+        """
+       
         return self.damage
     
     def get_damage(self, enemy, attack_type):
+        """
+        Applies damage to the player from an enemy attack, considering shield status.
+
+        Args:
+            enemy: The attacking enemy entity.
+            attack_type (str): Type of attack (e.g., 'bullet').
+        """
+
         if self.vulnerable:
             if not self.shield_active:
                 self.sounds['hit_sound'].play()
@@ -181,15 +226,30 @@ class Player(Entity):
 
 
     def get_grid_position(self):
+        """
+        Returns the player's current grid position.
+
+        Returns:
+            list: [grid_x, grid_y]
+        """
+
         grid_x = self.rect.centerx // TILESIZE
         grid_y = self.rect.centery // TILESIZE
         return [grid_x, grid_y]
 
     def check_death(self):
+        """
+        Checks if the player's health is depleted and removes the player if so.
+        """
+
         if self.health <= 0:
             self.kill()
 
     def handle_powerups(self):
+        """
+        Manages the duration and deactivation of all power-up effects.
+        """
+
         current_time = pygame.time.get_ticks()
 
         # Shield
@@ -220,11 +280,25 @@ class Player(Entity):
             print('Fortress shield deactivated')
 
     def activate_shield(self, duration):
+        """
+        Activates the shield power-up for the specified duration.
+
+        Args:
+            duration (int): Duration in seconds.
+        """
+
         self.shield_active = True
         self.shield_duration = duration * 1000
         self.shield_end_time = pygame.time.get_ticks() + duration * 1000
 
     def upgrade_shoot(self, duration):
+        """
+        Activates the shoot upgrade power-up, doubling damage for the specified duration.
+
+        Args:
+            duration (int): Duration in seconds.
+        """
+
         self.shoot_upgrade_active = True
         if self.damage < self.stats['damage'] * 2:
             self.damage *= 2
@@ -232,30 +306,66 @@ class Player(Entity):
         self.shoot_upgrade_end = pygame.time.get_ticks() + duration * 1000
 
     def slow_motion(self, duration):
+        """
+        Activates the slow motion power-up for the specified duration.
+
+        Args:
+            duration (int): Duration in seconds.
+        """
+
         self.slow_motion_active = True
         self.slow_motion_duration= duration * 1000
         self.slow_motion_end = pygame.time.get_ticks() + duration * 1000
 
     def get_health(self):
+        """
+        Restores one health point if not at maximum health.
+        """
+
         if self.health < self.stats["health"]:
             self.health += 1
 
     def bomb_everyone(self, duration):
+        """
+        Activates the bomb power-up for the specified duration.
+
+        Args:
+            duration (int): Duration in seconds.
+        """
+
         self.bomb_active = True
         self.bomb_end = pygame.time.get_ticks() + duration * 1000
 
     def fortress_shield (self, duration):
+        """
+        Activates the fortress shield power-up for the specified duration.
+
+        Args:
+            duration (int): Duration in seconds.
+        """
+
         self.fortress_shield_active = True
         self.fortress_shield_duration = duration * 1000
         self.fortress_shield_end = pygame.time.get_ticks() + duration * 1000
 
     def get_machine_gun(self, duration):
+        """
+        Activates the machine gun power-up, reducing attack cooldown for the specified duration.
+
+        Args:
+            duration (int): Duration in seconds.
+        """
+
         self.attack_cooldown = 200
         self.machine_gun_active = True
         self.machine_gun_duration= duration * 1000
         self.machine_gun_end = pygame.time.get_ticks() + duration * 1000
 
     def update(self):
+        """
+        Main update loop for the player. Handles input, death, cooldowns, status, power-ups, animation, and movement.
+        """
+        
         self.input()
         self.check_death()
         self.cooldowns()
