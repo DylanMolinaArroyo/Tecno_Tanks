@@ -16,18 +16,7 @@ El enfoque del desarrollo combina la jugabilidad retro con un diseño técnico a
 La arquitectura sigue un modelo **cliente-servidor distribuido**.
 Cada jugador ejecuta un cliente Pygame que se comunica con un **servidor central** para mantener sincronizado el estado del juego (posiciones, disparos, colisiones y destrucción de estructuras).
 
-```
-+------------------+        Internet        +--------------------+
-|   Cliente 1      |  <------------------>  |   Servidor Central |
-| (Pygame local)   |                       | (Control lógico)    |
-+------------------+                       +--------------------+
-        ↑                                           ↓
-        |                                           |
-+------------------+                        +------------------+
-|   Cliente 2      |                        |   Cliente N      |
-| (Pygame local)   |                        | (Pygame local)   |
-+------------------+                        +------------------+
-```
+![Arquitecture Diagram](/Arquitecture_diagram.png)
 
 ### 2.2 Componentes Principales
 
