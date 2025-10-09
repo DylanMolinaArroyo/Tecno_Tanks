@@ -1,8 +1,40 @@
 from csv import reader
+import os
 from os import walk
-
 import pygame
 import random
+from Code.Utilities.settings import tanks_data
+
+ASSET_CACHE = {}
+
+def load_all_assets():
+    """Carga todas las animaciones del juego una sola vez al inicio."""
+    print("Cargando todos los assets...")
+    
+    player_path = 'Assets/Entities/Player/'
+    ASSET_CACHE['player'] = {}
+    for animation in ['up', 'down', 'left', 'right', 'up_idle', 'down_idle', 'left_idle', 'right_idle']:
+        ASSET_CACHE['player'][animation] = import_folder(player_path + animation)
+
+    # Cargar animaciones de los enemigos 
+    for enemy_name in tanks_data.keys():
+        enemy_path = f'Assets/Entities/Enemies/{enemy_name}/'
+        ASSET_CACHE[enemy_name] = {}
+        for animation in ['up', 'down', 'left', 'right', 'up_idle', 'down_idle', 'left_idle', 'right_idle', 'attack']:
+            full_path = enemy_path + animation
+            ASSET_CACHE[enemy_name][animation] = import_folder(full_path)
+            
+    explosion_path = "Assets/Effects/Circle_explosion"
+    ASSET_CACHE['explosion'] = []
+    for filename in sorted(os.listdir(explosion_path)):
+        if filename.endswith(".png"):
+            full_path = os.path.join(explosion_path, filename)
+            img = pygame.image.load(full_path).convert_alpha()
+            img = pygame.transform.scale(img, (180, 180))
+            ASSET_CACHE['explosion'].append(img)
+
+    print("Assets cargados exitosamente.")
+
 
 def import_csv_layout(path):
     """

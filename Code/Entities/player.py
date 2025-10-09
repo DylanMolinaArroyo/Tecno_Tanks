@@ -2,6 +2,7 @@ import pygame
 from Code.Entities.entity import Entity
 from Code.Utilities.settings import *
 from Code.Functions.support import import_folder
+from Code.Functions.support import ASSET_CACHE
 
 class Player(Entity):
     def __init__(self, pos, groups, obstacle_sprites, create_bullet, is_local=True):
@@ -19,6 +20,8 @@ class Player(Entity):
         self.is_local = is_local
 
         self.sprite_type = 'player'
+        
+        self.status = 'up'
 
         self.original_image = pygame.image.load('Assets/Entities/Player/up/PlayerTankUp.png').convert_alpha()
         self.image = self.original_image
@@ -27,7 +30,7 @@ class Player(Entity):
 
         # Graphics setup
         self.import_player_assets()
-        self.status = 'up'
+        #self.status = 'up'
 
         # Movement
         self.speed = 6
@@ -92,14 +95,7 @@ class Player(Entity):
         """
         Loads player animation frames for all directions and idle states.
         """
-
-        character_path = 'Assets/Entities/Player/'
-        self.animations = {'up': [], 'down': [], 'left': [], 'right': [],
-                           'up_idle': [], 'down_idle': [], 'left_idle': [], 'right_idle': []}
-        
-        for animation in self.animations.keys():
-            full_path = character_path + animation
-            self.animations[animation] = import_folder(full_path)
+        self.animations = ASSET_CACHE['player']
 
     def input(self):
         """
@@ -139,8 +135,6 @@ class Player(Entity):
         Updates the player's status to idle if not moving.
         """
 
-        # --- CAMBIO CRÍTICO ---
-        # Un jugador remoto no debe calcular su propio estado; lo recibe por la red.
         if not self.is_local:
             return
 

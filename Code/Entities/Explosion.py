@@ -1,5 +1,6 @@
 import pygame
 import os
+from Code.Functions.support import ASSET_CACHE
 
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, pos, groups, folder_path="Assets/Effects/Circle_explosion"):
@@ -15,18 +16,21 @@ class Explosion(pygame.sprite.Sprite):
         super().__init__(groups)
         self.sprite_type = 'explosion'
 
-        self.frames = []
-        for filename in sorted(os.listdir(folder_path)):
-            if filename.endswith(".png"):
-                img = pygame.image.load(os.path.join(folder_path, filename)).convert_alpha()
-                img = pygame.transform.scale(img, (180, 180))
-                self.frames.append(img)
+        
+        self.frames = ASSET_CACHE['explosion']
 
         self.frame_index = 0
-        self.image = self.frames[self.frame_index]
-        self.rect = self.image.get_rect(center=pos)
+        
+        if self.frames:
+            self.image = self.frames[self.frame_index]
+            self.rect = self.image.get_rect(center=pos)
+        else:
+            self.image = pygame.Surface((1, 1)) 
+            self.rect = self.image.get_rect(center=pos)
+            self.kill() 
 
         self.animation_speed = 0.2
+        
 
     def update(self):
         """

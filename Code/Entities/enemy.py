@@ -6,6 +6,7 @@ from Code.Functions.A_star import a_star
 from Code.Utilities.settings import *
 from Code.Entities.entity import Entity
 from Code.Functions.support import import_folder
+from Code.Functions.support import ASSET_CACHE
 
 class Enemy(Entity):
     def __init__(self, enemy_name, pos, groups, obstacle_sprites, create_bullet, player, structure, matrix_route, path_request):
@@ -27,6 +28,10 @@ class Enemy(Entity):
         super().__init__(groups)
 
         self.sprite_type = 'enemy'
+        
+
+        self.status = 'down_idle'
+        self.animations = {} 
 
         self.player = player
         self.structure_pos = structure.get_grid_position()
@@ -36,8 +41,14 @@ class Enemy(Entity):
 
         # graphics setup
         self.import_graphics(enemy_name)
-        self.status = 'down_idle'
-        self.image = self.animations[self.status][self.frame_index]
+        #self.status = 'down_idle'
+        #self.image = self.animations[self.status][self.frame_index]
+        
+        if self.status in self.animations and self.animations[self.status]:
+            self.image = self.animations[self.status][self.frame_index]
+        else:
+            self.image = pygame.Surface((TILESIZE, TILESIZE))
+            self.image.fill('magenta') 
 
         # movement
         self.rect = self.image.get_rect(topleft=pos)
@@ -115,15 +126,8 @@ class Enemy(Entity):
         Args:
             name (str): Enemy type/name for asset path.
         """
-
-        self.animations = {
-            'up': [], 'down': [], 'left': [], 'right': [],
-            'up_idle': [], 'down_idle': [], 'left_idle': [], 'right_idle': [],
-            'attack': []
-        }
-        main_path = f'Assets/Entities/Enemies/{name}/'
-        for animation in self.animations.keys():
-            self.animations[animation] = import_folder(main_path + animation)
+        
+        self.animations = ASSET_CACHE[name]
 
     def get_player_distance_direction(self, player):
         """
@@ -479,54 +483,16 @@ class Enemy(Entity):
         self.speed = self.enemy_info['speed']
         self.attack_cooldown = self.enemy_info['attack_cooldown']
         self.slow_motion_applied = False
-
-    """def update(self):
-
-        distance_to_player, _ = self.get_player_distance_direction(self.player)
-        enemyPos = self.get_grid_position()
-
-        if distance_to_player <= self.notice_radius:
-            playerPos = self.player.get_grid_position()
-            self.request_path(self.matrix_route, playerPos, enemyPos)
-            self.target = "player"
-        else:
-            self.request_path(self.matrix_route, self.structure_pos, enemyPos)
-            self.target = "structure"
-
-        if self.path:
-            self.is_wandering = False
-            self.enemy_move(self.speed)
-        else:
-            self.is_wandering = True
-            self.wander_move()
-
-        # slow motion
-        if self.player.slow_motion_active and not self.slow_motion_applied:
-            self.apply_slow_motion()
-        elif not self.player.slow_motion_active and self.slow_motion_applied:
-            self.remove_slow_motion()
-
-        self.hit_reaction()
-        self.animate()
-        self.cooldowns()
-
-    def enemy_update(self, player):
-        
-        self.get_status(player)
-        self.check_death()
-        self.actions(player)"""
     
     def update(self):
         """
         Main update loop for the enemy.
         Handles pathfinding, movement, slow motion, hit reaction, animation, and cooldowns.
         """
-        # --- CAMBIO CRÍTICO ---
-        # La IA de los enemigos solo debe correr en el anfitrión (host).
-        # Hacemos una comprobación: si el 'player' de referencia de este enemigo es remoto,
-        # significa que estamos en el cliente del anfitrión. Si es local, estamos en el invitado.
+        
         if self.player and not self.player.is_local:
-            return # Si estamos en el cliente invitado, no ejecutamos NADA de la IA.
+            self.animate()
+            return 
 
         distance_to_player, _ = self.get_player_distance_direction(self.player)
         enemyPos = self.get_grid_position()
@@ -563,8 +529,7 @@ class Enemy(Entity):
         Args:
             player (Player): Reference to the player object.
         """
-        # --- CAMBIO CRÍTICO ---
-        # También bloqueamos esta lógica en el cliente invitado.
+        
         if self.player and not self.player.is_local:
             return
 

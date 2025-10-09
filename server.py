@@ -19,7 +19,7 @@ class GameServer:
         self.host = host
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # CORRECCIÓN: Esta línea va DESPUÉS de crear el socket
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
         self.connections = []
         self.games = {}  # {game_id: {connections: [player1_conn, player2_conn], game_state: {}, db_id: None, host_username: ''}}
         self.game_counter = 0
@@ -34,8 +34,8 @@ class GameServer:
             print("Servidor ejecutándose sin base de datos")
         
         # Mapeo de conexiones a usuarios
-        self.connection_users = {}  # {conn: username}
-        self.connection_game = {}   # {conn: game_id}
+        self.connection_users = {}  
+        self.connection_game = {}   
         
     def start(self):
         try:
@@ -108,9 +108,7 @@ class GameServer:
     def handle_client(self, conn, addr):
         print(f"Manejando cliente desde {addr}")
     
-        # Configurar timeout más largo y opciones de socket
-        # Configurar timeout más largo
-        conn.settimeout(60.0)  # 60 segundos en lugar de 30
+        conn.settimeout(60.0)  
         conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
         try:
@@ -198,8 +196,8 @@ class GameServer:
             
         elif command == 'player_action':
             game_id = message.get('game_id')
-            action_type = message.get('action_type')  # CORRECCIÓN: usar action_type
-            action_data = message.get('action_data')  # CORRECCIÓN: usar action_data
+            action_type = message.get('action_type') 
+            action_data = message.get('action_data')  
             self.broadcast_to_game(game_id, {
                 'type': 'player_action', 
                 'action_type': action_type,
@@ -326,7 +324,6 @@ class GameServer:
                 if self.db and self.games[game_id]['db_id']:
                     self.db.start_game(self.games[game_id]['db_id'])
             
-                # --- CAMBIO IMPORTANTE: Generar y enviar una semilla aleatoria ---
                 game_seed = random.randint(0, 999999) # Genera una semilla única para esta partida
                 
                 game_message = {
@@ -338,12 +335,12 @@ class GameServer:
                 print(f"🎮 SERVER DEBUG: Enviando mensaje a jugadores: {game_message}")
                 self.broadcast_to_game(game_id, game_message)
             
-                print(f"🎮 SERVER: Juego {game_id} iniciado con semilla: {game_seed}")
+                print(f"SERVER: Juego {game_id} iniciado con semilla: {game_seed}")
             else:
-                print(f"❌ SERVER ERROR: Juego {game_id} no encontrado")
+                print(f"SERVER ERROR: Juego {game_id} no encontrado")
                 
         except Exception as e:
-            print(f"❌ SERVER ERROR iniciando juego: {e}")
+            print(f"SERVER ERROR iniciando juego: {e}")
             import traceback
             traceback.print_exc()
     
@@ -395,19 +392,19 @@ class GameServer:
     
     def broadcast_to_game(self, game_id, message, sender_conn=None):
         """Envía mensaje a todos los jugadores de una partida"""
-        print(f"🎮 SERVER DEBUG: broadcast_to_game - game_id: {game_id}, mensaje: {message}")
+        print(f"SERVER DEBUG: broadcast_to_game - game_id: {game_id}, mensaje: {message}")
         if game_id in self.games:
             for conn in self.games[game_id]['connections']:
                 if conn and conn != sender_conn:
                     try:
-                        print(f"🎮 SERVER DEBUG: Enviando a conexión: {conn}")
+                        print(f"SERVER DEBUG: Enviando a conexión: {conn}")
                         conn.send(pickle.dumps(message))
-                        print(f"🎮 SERVER DEBUG: Mensaje enviado exitosamente")
+                        print(f"SERVER DEBUG: Mensaje enviado exitosamente")
                     except Exception as e:
-                        print(f"❌ SERVER ERROR enviando mensaje a jugador: {e}")
+                        print(f"SERVER ERROR enviando mensaje a jugador: {e}")
                         self.remove_connection(conn)
         else:
-            print(f"❌ SERVER ERROR: Juego {game_id} no encontrado para broadcast")
+            print(f"SERVER ERROR: Juego {game_id} no encontrado para broadcast")
     
     def send_to_connection(self, conn, message):
         """Envía mensaje a una conexión específica"""

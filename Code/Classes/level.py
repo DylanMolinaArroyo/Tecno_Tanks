@@ -61,6 +61,9 @@ class Level:
 
         # user interface
         self.ui = UI()
+        
+        self.tile_map = {} # Un diccionario para encontrar tiles por su posición
+        self.destroyed_tiles_since_last_snapshot = [] # Registra los muros destruidos
 
         # Path request setup
         self.path_request = path_request.PathRequest()
@@ -101,7 +104,9 @@ class Level:
                                 case "1":
                                     Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'rocks', graphics['rock'])
                                 case "3":
-                                    Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'walls', graphics['wall'])
+                                    #Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'walls', graphics['wall'])
+                                    tile = Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'walls', graphics['wall'])
+                                    self.tile_map[(row_index, col_index)] = tile # Guardar la tile
                                 case "5":
                                     self.structure = Structure_tile(
                                         (x, y),
@@ -189,6 +194,10 @@ class Level:
                                 # Convert to matrix indexes
                                 row = y // TILESIZE
                                 col = x // TILESIZE
+                                
+                                # --- AÑADIR ESTA LÍNEA ---
+                                self.destroyed_tiles_since_last_snapshot.append((row, col))
+                                # ---------------------------
 
                                 # Update matrix with -1
                                 self.matrix_route[0][row][col] = '-1'
@@ -335,8 +344,6 @@ class Level:
         Main update and draw loop for the level.
         Handles entity updates, drawing, UI, and wave logic.
         """
-
-        # IMPORTANT TO KEEP IN THIS ORDER
 
         # 1 - Logic and sprites
         self.visible_sprites.update()

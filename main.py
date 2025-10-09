@@ -1,10 +1,12 @@
 import pygame, sys
 import time
 import socket
+#import os
 from Code.Utilities.settings import *
 from Code.UI.button import Button
 from Code.Classes.level import Level
 from Code.Network.client import NetworkClient
+from Code.Functions.support import load_all_assets 
 
 class Game: 
     def __init__(self):
@@ -22,6 +24,9 @@ class Game:
         
         self.screen = pygame.display.set_mode((WIDTH, HEIGTH))
         pygame.display.set_caption('TecnoTanks')
+        
+        load_all_assets()
+        
         self.clock = pygame.time.Clock()
 
         self.state = 'menu'  # 'menu', 'choose', 'play', 'end', 'multiplayer_menu', 'create_join', 'lobby', 'settings', 'multiplayer_difficulty'
@@ -393,25 +398,24 @@ class Game:
             print("Player disconnected")
 
         def handle_game_started(message):
-            print(f"🎮 DEBUG: handle_game_started RECIBIDO!")
-            print(f"🎮 DEBUG: Mensaje completo: {message}")
+            print(f"DEBUG: handle_game_started RECIBIDO!")
+            print(f"DEBUG: Mensaje completo: {message}")
             
             difficulty = message.get('difficulty')
-            seed = message.get('seed') # Obtenemos la semilla del mensaje
+            seed = message.get('seed') 
 
             if not difficulty or seed is None:
-                print("⚠️ DEBUG: Faltan datos en el mensaje de inicio, usando default")
+                print("DEBUG: Faltan datos en el mensaje de inicio, usando default")
                 difficulty = {
                     "name": "Multiplayer", 
                     "enemyTankType1": 15, "enemyTankType2": 15, 
                     "enemyTankType3": 10, "enemyTankType4": 5
                 }
-                seed = time.time() # Semilla de emergencia
+                seed = time.time() 
             
-            # --- CAMBIO IMPORTANTE: Usar la semilla ANTES de crear el nivel ---
             import random
             print(f"🎲 DEBUG: Estableciendo semilla aleatoria a: {seed}")
-            random.seed(seed) # ¡Esto sincronizará la generación inicial!
+            random.seed(seed) 
             
             print(f"🎮 DEBUG: Dificultad establecida: {difficulty}")
             self.difficulty = difficulty
@@ -425,7 +429,6 @@ class Game:
             reason = message.get('reason', 'Unknown error')
             print(f"Join failed: {reason}")
             
-        # --- FUNCIÓN NUEVA: Para recibir los snapshots del juego ---
         def handle_state_update(message):
             # Solo procesamos si estamos en el estado 'play' y el nivel existe
             if self.state == 'play' and self.level and hasattr(self.level, 'apply_game_state'):
@@ -433,7 +436,6 @@ class Game:
                 if game_state:
                     self.level.apply_game_state(game_state)
 
-        # --- Registramos TODOS los manejadores ---
         self.network_client.register_handler('game_created', handle_game_created)
         self.network_client.register_handler('game_joined', handle_game_joined)
         self.network_client.register_handler('player_joined', handle_player_joined)
@@ -441,17 +443,17 @@ class Game:
         self.network_client.register_handler('game_started', handle_game_started)
         self.network_client.register_handler('player_ready', handle_player_ready)
         self.network_client.register_handler('join_failed', handle_join_failed)
-        self.network_client.register_handler('state_update', handle_state_update) # <-- REGISTRAMOS EL NUEVO MANEJADOR
+        self.network_client.register_handler('state_update', handle_state_update) 
 
     def start_multiplayer_game(self):
-        print("🎮 DEBUG: start_multiplayer_game llamado")
-        print(f"🎮 DEBUG: Dificultad recibida: {self.difficulty}")
-        print(f"🎮 DEBUG: Player number: {self.player_number}")
+        print("DEBUG: start_multiplayer_game llamado")
+        print(f"DEBUG: Dificultad recibida: {self.difficulty}")
+        print(f"DEBUG: Player number: {self.player_number}")
         
         try:
             # Siempre usar MultiplayerLevel
             from Code.Classes.multiplayer_level import MultiplayerLevel
-            print("🎮 DEBUG: Creando MultiplayerLevel...")
+            print("DEBUG: Creando MultiplayerLevel...")
             
             self.level = MultiplayerLevel(
                 self.difficulty, 
@@ -460,10 +462,10 @@ class Game:
             )
             
             self.state = 'play'
-            print("🎮 DEBUG: Juego multiplayer iniciado - estado cambiado a 'play'")
+            print("DEBUG: Juego multiplayer iniciado - estado cambiado a 'play'")
             
         except Exception as e:
-            print(f"❌ ERROR crítico en start_multiplayer_game: {e}")
+            print(f"ERROR crítico en start_multiplayer_game: {e}")
             import traceback
             traceback.print_exc()
             self.state = 'lobby'
@@ -550,7 +552,7 @@ class Game:
                     self.state = 'end'
                     
         except Exception as e:
-            print(f"❌ ERROR en juego: {e}")
+            print(f"ERROR en juego: {e}")
             import traceback
             traceback.print_exc()
             self.state = 'choose'
@@ -666,23 +668,21 @@ class Game:
                 
                 elif self.state == 'lobby':
                     if self.is_host and hasattr(self, 'start_game_button') and self.start_game_button.checkForInput(mouse_pos) and self.players_connected == 2:
-                        # MODIFICACIÓN PARA TESTING - Iniciar directamente con dificultad media
+                        
                         multiplayer_difficulties = {
                             "medium": {"name": "Medium", "enemyTankType1": 12, "enemyTankType2": 12, "enemyTankType3": 10, "enemyTankType4": 6}
                         }
                         self.difficulty = multiplayer_difficulties["medium"]
-                        print("🎮 DEBUG: Host iniciando juego directamente con dificultad media...")
-                        print(f"🎮 DEBUG: Network client connected: {self.network_client.connected}")
-                        print(f"🎮 DEBUG: Game code: {self.game_code}")
+                        print("DEBUG: Host iniciando juego directamente con dificultad media...")
+                        print(f"DEBUG: Network client connected: {self.network_client.connected}")
+                        print(f"DEBUG: Game code: {self.game_code}")
                         
-                        # Enviar comando de inicio al servidor
-                        #success = self.network_client.send_start_game(self.difficulty)
+                        
                         success = self.network_client.send_start_game(self.difficulty, self.game_code)
-                        print(f"🎮 DEBUG: Comando start_game enviado - éxito: {success}")
+                        print(f"DEBUG: Comando start_game enviado - éxito: {success}")
                         
                     elif not self.is_host and self.players_connected == 2 and hasattr(self, 'ready_button') and self.ready_button.checkForInput(mouse_pos):
-                        # Jugador marca como listo
-                        print("🎮 DEBUG: Jugador marcándose como listo...")
+                        print("DEBUG: Jugador marcándose como listo...")
                         self.network_client.send_player_ready()
                     elif self.lobby_back_button.checkForInput(mouse_pos):
                         self.state = 'multiplayer_menu'
@@ -690,7 +690,6 @@ class Game:
                             self.network_client.disconnect()
                 
                 elif self.state == 'multiplayer_difficulty':
-                    # DEFINIR dificultades para multiplayer
                     multiplayer_difficulties = {
                         "easy": {"name": "Easy", "enemyTankType1": 15, "enemyTankType2": 15, "enemyTankType3": 8, "enemyTankType4": 4},
                         "medium": {"name": "Medium", "enemyTankType1": 12, "enemyTankType2": 12, "enemyTankType3": 10, "enemyTankType4": 6},
