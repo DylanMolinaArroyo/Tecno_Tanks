@@ -4,6 +4,7 @@ import pickle
 import time
 import os
 from datetime import datetime
+import random 
 
 # Importar el módulo de base de datos
 try:
@@ -308,9 +309,9 @@ class GameServer:
         except Exception as e:
             print(f"Error uniendo jugador a partida: {e}")
             return False
-    
+            
     def start_game(self, game_id, difficulty=None):
-        """Inicia una partida con la dificultad especificada"""
+        """Inicia una partida con la dificultad especificada y una semilla aleatoria"""
         print(f"🎮 SERVER DEBUG: start_game llamado - game_id: {game_id}, existe: {game_id in self.games}")
         try:
             if game_id in self.games:
@@ -325,15 +326,19 @@ class GameServer:
                 if self.db and self.games[game_id]['db_id']:
                     self.db.start_game(self.games[game_id]['db_id'])
             
-                # Notificar a ambos jugadores con la dificultad - CORREGIDO
+                # --- CAMBIO IMPORTANTE: Generar y enviar una semilla aleatoria ---
+                game_seed = random.randint(0, 999999) # Genera una semilla única para esta partida
+                
                 game_message = {
                     'type': 'game_started',
-                    'difficulty': difficulty or self.games[game_id]['game_state'].get('difficulty', {})
+                    'difficulty': difficulty or self.games[game_id]['game_state'].get('difficulty', {}),
+                    'seed': game_seed  # Añade la semilla al mensaje
                 }
+                
                 print(f"🎮 SERVER DEBUG: Enviando mensaje a jugadores: {game_message}")
                 self.broadcast_to_game(game_id, game_message)
             
-                print(f"🎮 SERVER: Juego {game_id} iniciado con dificultad: {difficulty}")
+                print(f"🎮 SERVER: Juego {game_id} iniciado con semilla: {game_seed}")
             else:
                 print(f"❌ SERVER ERROR: Juego {game_id} no encontrado")
                 

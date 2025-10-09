@@ -480,11 +480,53 @@ class Enemy(Entity):
         self.attack_cooldown = self.enemy_info['attack_cooldown']
         self.slow_motion_applied = False
 
+    """def update(self):
+
+        distance_to_player, _ = self.get_player_distance_direction(self.player)
+        enemyPos = self.get_grid_position()
+
+        if distance_to_player <= self.notice_radius:
+            playerPos = self.player.get_grid_position()
+            self.request_path(self.matrix_route, playerPos, enemyPos)
+            self.target = "player"
+        else:
+            self.request_path(self.matrix_route, self.structure_pos, enemyPos)
+            self.target = "structure"
+
+        if self.path:
+            self.is_wandering = False
+            self.enemy_move(self.speed)
+        else:
+            self.is_wandering = True
+            self.wander_move()
+
+        # slow motion
+        if self.player.slow_motion_active and not self.slow_motion_applied:
+            self.apply_slow_motion()
+        elif not self.player.slow_motion_active and self.slow_motion_applied:
+            self.remove_slow_motion()
+
+        self.hit_reaction()
+        self.animate()
+        self.cooldowns()
+
+    def enemy_update(self, player):
+        
+        self.get_status(player)
+        self.check_death()
+        self.actions(player)"""
+    
     def update(self):
         """
         Main update loop for the enemy.
         Handles pathfinding, movement, slow motion, hit reaction, animation, and cooldowns.
         """
+        # --- CAMBIO CRÍTICO ---
+        # La IA de los enemigos solo debe correr en el anfitrión (host).
+        # Hacemos una comprobación: si el 'player' de referencia de este enemigo es remoto,
+        # significa que estamos en el cliente del anfitrión. Si es local, estamos en el invitado.
+        if self.player and not self.player.is_local:
+            return # Si estamos en el cliente invitado, no ejecutamos NADA de la IA.
 
         distance_to_player, _ = self.get_player_distance_direction(self.player)
         enemyPos = self.get_grid_position()
@@ -521,7 +563,11 @@ class Enemy(Entity):
         Args:
             player (Player): Reference to the player object.
         """
-        
+        # --- CAMBIO CRÍTICO ---
+        # También bloqueamos esta lógica en el cliente invitado.
+        if self.player and not self.player.is_local:
+            return
+
         self.get_status(player)
         self.check_death()
         self.actions(player)

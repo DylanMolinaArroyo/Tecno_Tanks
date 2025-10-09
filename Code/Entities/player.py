@@ -4,7 +4,7 @@ from Code.Utilities.settings import *
 from Code.Functions.support import import_folder
 
 class Player(Entity):
-    def __init__(self, pos, groups, obstacle_sprites, create_bullet):
+    def __init__(self, pos, groups, obstacle_sprites, create_bullet, is_local=True):
         """
         Initializes the player entity, sets up graphics, movement, stats, power-ups, and sounds.
 
@@ -16,6 +16,7 @@ class Player(Entity):
         """
 
         super().__init__(groups)
+        self.is_local = is_local
 
         self.sprite_type = 'player'
 
@@ -137,6 +138,11 @@ class Player(Entity):
         """
         Updates the player's status to idle if not moving.
         """
+
+        # --- CAMBIO CRÍTICO ---
+        # Un jugador remoto no debe calcular su propio estado; lo recibe por la red.
+        if not self.is_local:
+            return
 
         # Idle status
         if self.direction.x == 0 and self.direction.y == 0:
@@ -366,7 +372,10 @@ class Player(Entity):
         Main update loop for the player. Handles input, death, cooldowns, status, power-ups, animation, and movement.
         """
         
-        self.input()
+        if self.is_local: 
+            self.input()
+        
+        #self.input()
         self.check_death()
         self.cooldowns()
         self.get_status()

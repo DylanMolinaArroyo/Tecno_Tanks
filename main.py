@@ -364,7 +364,7 @@ class Game:
         for button in [self.save_settings_button, self.settings_back_button]:
             button.changeColor(menu_mouse_pos)
             button.update(self.screen)
-
+    
     def setup_network_handlers(self):
         """
         Registers network event handlers for multiplayer game events (game created/joined, player joined/disconnected).
@@ -374,8 +374,6 @@ class Game:
             self.player_number = message['player_number']
             self.is_host = True
             self.state = 'lobby'
-            
-            # IMPORTANTE: También establecer game_id en el network_client
             self.network_client.game_id = self.game_code
             print(f"Game created: {self.game_code}")
 
@@ -383,8 +381,6 @@ class Game:
             self.game_code = message['game_id']
             self.player_number = message['player_number']
             self.state = 'lobby'
-            
-            # IMPORTANTE: También establecer game_id en el network_client
             self.network_client.game_id = self.game_code
             print(f"Joined game: {self.game_code}")
 
@@ -400,17 +396,22 @@ class Game:
             print(f"🎮 DEBUG: handle_game_started RECIBIDO!")
             print(f"🎮 DEBUG: Mensaje completo: {message}")
             
-            # Asegurarnos de que tenemos una dificultad válida
             difficulty = message.get('difficulty')
-            if not difficulty:
-                print("⚠️ DEBUG: No hay dificultad en el mensaje, usando default")
+            seed = message.get('seed') # Obtenemos la semilla del mensaje
+
+            if not difficulty or seed is None:
+                print("⚠️ DEBUG: Faltan datos en el mensaje de inicio, usando default")
                 difficulty = {
                     "name": "Multiplayer", 
-                    "enemyTankType1": 15, 
-                    "enemyTankType2": 15, 
-                    "enemyTankType3": 10, 
-                    "enemyTankType4": 5
+                    "enemyTankType1": 15, "enemyTankType2": 15, 
+                    "enemyTankType3": 10, "enemyTankType4": 5
                 }
+                seed = time.time() # Semilla de emergencia
+            
+            # --- CAMBIO IMPORTANTE: Usar la semilla ANTES de crear el nivel ---
+            import random
+            print(f"🎲 DEBUG: Estableciendo semilla aleatoria a: {seed}")
+            random.seed(seed) # ¡Esto sincronizará la generación inicial!
             
             print(f"🎮 DEBUG: Dificultad establecida: {difficulty}")
             self.difficulty = difficulty
@@ -423,7 +424,16 @@ class Game:
         def handle_join_failed(message):
             reason = message.get('reason', 'Unknown error')
             print(f"Join failed: {reason}")
+            
+        # --- FUNCIÓN NUEVA: Para recibir los snapshots del juego ---
+        def handle_state_update(message):
+            # Solo procesamos si estamos en el estado 'play' y el nivel existe
+            if self.state == 'play' and self.level and hasattr(self.level, 'apply_game_state'):
+                game_state = message.get('game_state')
+                if game_state:
+                    self.level.apply_game_state(game_state)
 
+        # --- Registramos TODOS los manejadores ---
         self.network_client.register_handler('game_created', handle_game_created)
         self.network_client.register_handler('game_joined', handle_game_joined)
         self.network_client.register_handler('player_joined', handle_player_joined)
@@ -431,6 +441,7 @@ class Game:
         self.network_client.register_handler('game_started', handle_game_started)
         self.network_client.register_handler('player_ready', handle_player_ready)
         self.network_client.register_handler('join_failed', handle_join_failed)
+        self.network_client.register_handler('state_update', handle_state_update) # <-- REGISTRAMOS EL NUEVO MANEJADOR
 
     def start_multiplayer_game(self):
         print("🎮 DEBUG: start_multiplayer_game llamado")
