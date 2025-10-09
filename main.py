@@ -1,7 +1,5 @@
 import pygame, sys
 import time
-import socket
-#import os
 from Code.Utilities.settings import *
 from Code.UI.button import Button
 from Code.Classes.level import Level
@@ -108,12 +106,12 @@ class Game:
         self.is_host = False
         self.player_number = None
 
-        # Configuración de red
+        # network configuration
         self.server_ip = "localhost"
         self.username = "Player" + str(int(time.time()) % 1000)
         self.multiplayer_level = None
         
-        # Estados de input
+        # Input states
         self.ip_input_active = False
         self.server_ip_input = "localhost"
         self.username_input_active = False
@@ -146,16 +144,25 @@ class Game:
         surface.blit(text_surf, text_rect)
 
     def draw_text_input(self, surface, prompt, text, font, color, pos, max_width=300):
-        # Dibujar prompt
+        """
+        Draws a text input field on the screen.
+
+        Args:
+            surface: Pygame surface where the input field is drawn.
+            prompt (str): Label text displayed to the left of the input field.
+            text (str): Current text entered by the user.
+            font: Pygame font used to render the text.
+            color: Text color (can be a name or RGB tuple).
+            pos (tuple): Center position (x, y) of the input field.
+            max_width (int, optional): Maximum width of the input field. Default is 300.
+        """
         prompt_surf = font.render(prompt, True, color)
         prompt_rect = prompt_surf.get_rect(midleft=(pos[0] - 150, pos[1]))
         surface.blit(prompt_surf, prompt_rect)
         
-        # Dibujar caja de texto
         text_surf = font.render(text, True, color)
         text_rect = text_surf.get_rect(midleft=(pos[0] + 50, pos[1]))
         
-        # Dibujar fondo de la caja de texto
         input_rect = pygame.Rect(text_rect.left - 5, text_rect.top - 5, 
                                max_width, text_rect.height + 10)
         pygame.draw.rect(surface, (50, 50, 50), input_rect)
@@ -164,21 +171,29 @@ class Game:
         surface.blit(text_surf, text_rect)
 
     def draw_input_field(self, surface, label, text, font, color, pos, max_width=300, is_active=False):
-        """Dibuja un campo de entrada con label"""
-        # Dibujar label
+        """
+        Draws a labeled input field on the screen.
+
+        Args:
+            surface: Pygame surface where the input field is drawn.
+            label (str): Label text displayed to the left of the input field.
+            text (str): Current text entered by the user.
+            font: Pygame font used to render the text.
+            color: Text color (can be a name or RGB tuple).
+            pos (tuple): Center position (x, y) of the input field.
+            max_width (int, optional): Maximum width of the input field. Default is 300.
+            is_active (bool, optional): If True, highlights the field as active. Default is False.
+        """
         label_surf = font.render(label, True, color)
         label_rect = label_surf.get_rect(midleft=(pos[0] - 200, pos[1]))
         surface.blit(label_surf, label_rect)
         
-        # Dibujar caja de texto
         text_surf = font.render(text, True, color)
         text_rect = text_surf.get_rect(midleft=(pos[0], pos[1]))
         
-        # Dibujar fondo de la caja de texto
         input_rect = pygame.Rect(text_rect.left - 10, text_rect.top - 5, 
                                max_width, text_rect.height + 10)
         
-        # Color diferente si está activo
         bg_color = (80, 80, 80) if is_active else (50, 50, 50)
         border_color = (255, 255, 0) if is_active else (200, 200, 200)
         
@@ -194,7 +209,7 @@ class Game:
         self.screen.blit(self.bg_image, (0, 0))
         menu_mouse_pos = pygame.mouse.get_pos()
 
-        self.draw_text_with_outline(self.screen, "TECNO TANKS", self.get_font(100), "black", "white", (450, 200), outline_width=5)
+        self.draw_text_with_outline(self.screen, "TECNO TANKS", self.get_font(100), "black", "white", (500, 200), outline_width=5)
 
         for button in [self.play_button, self.quit_button, self.settings_button]:
             button.changeColor(menu_mouse_pos)
@@ -231,7 +246,6 @@ class Game:
 
         self.draw_text_with_outline(self.screen, "CREATING GAME...", self.get_font(80), "black", "white", (640, 200), outline_width=5)
 
-        # Mantener conexión activa - ENVIAR PING CADA 5 SEGUNDOS
         current_time = pygame.time.get_ticks()
         if not hasattr(self, 'last_ping_time'):
             self.last_ping_time = current_time
@@ -242,7 +256,6 @@ class Game:
                 self.last_ping_time = current_time
 
         if not self.network_client.connected:
-            # Usar la IP configurada
             if self.network_client.connect(self.server_ip, 5555, self.username_input):
                 self.network_client.create_game(self.username_input)
                 self.setup_network_handlers()
@@ -256,7 +269,6 @@ class Game:
         self.draw_text_with_outline(self.screen, f"Server: {self.server_ip}", self.get_font(25), "black", "white", (640, 450), outline_width=2)
         self.draw_text_with_outline(self.screen, f"User: {self.username_input}", self.get_font(25), "black", "white", (640, 500), outline_width=2)
 
-        # Instrucción para continuar
         if self.network_client.connected and self.game_code:
             self.draw_text_with_outline(self.screen, "Going to lobby...", self.get_font(25), "green", "white", (640, 570), outline_width=2)
 
@@ -278,7 +290,6 @@ class Game:
             button.changeColor(menu_mouse_pos)
             button.update(self.screen)
         
-        # Mostrar información de conexión
         self.draw_text_with_outline(self.screen, f"Server: {self.server_ip}", self.get_font(25), "black", "white", (640, 400), outline_width=2)
         self.draw_text_with_outline(self.screen, f"User: {self.username_input}", self.get_font(25), "black", "white", (640, 450), outline_width=2)
         
@@ -286,12 +297,11 @@ class Game:
         self.screen.blit(self.bg_image, (0, 0))
         menu_mouse_pos = pygame.mouse.get_pos()
         
-        # Mantener conexión activa en el lobby también
         current_time = pygame.time.get_ticks()
         if not hasattr(self, 'last_ping_time'):
             self.last_ping_time = current_time
         
-        if current_time - self.last_ping_time > 5000:  # 5 segundos
+        if current_time - self.last_ping_time > 5000:
             if self.network_client.connected:
                 self.network_client.send_message({'command': 'ping'})
                 self.last_ping_time = current_time
@@ -301,16 +311,13 @@ class Game:
         self.draw_text_with_outline(self.screen, f"Players: {self.players_connected}/2", self.get_font(40), "black", "white", (640, 330), outline_width=3)
         self.draw_text_with_outline(self.screen, f"Username: {self.username_input}", self.get_font(30), "black", "white", (640, 380), outline_width=2)
 
-        # Mostrar estado de conexión
         status_color = "green" if self.network_client.connected else "red"
         status_text = "CONNECTED" if self.network_client.connected else "DISCONNECTED"
         self.draw_text_with_outline(self.screen, f"Status: {status_text}", self.get_font(25), status_color, "white", (640, 430), outline_width=2)
 
-        # Mostrar estado del host/jugador
         if self.is_host:
             self.draw_text_with_outline(self.screen, "Role: HOST", self.get_font(30), "green", "white", (640, 470), outline_width=2)
         
-            # Botón para iniciar juego (solo host) - MODIFICADO PARA TESTING
             start_text = "START GAME" if self.players_connected == 2 else "WAITING FOR PLAYER..."
             self.start_game_button = Button(pos=(640, 550), 
                                         text_input=start_text, font=self.get_font(55), 
@@ -322,7 +329,6 @@ class Game:
         else:
             self.draw_text_with_outline(self.screen, "Role: PLAYER", self.get_font(30), "blue", "white", (640, 470), outline_width=2)
         
-            # Botón para marcar como listo (solo jugadores, no host)
             if self.players_connected == 2:
                 ready_text = "READY"
                 self.ready_button = Button(pos=(640, 550), 
@@ -356,16 +362,12 @@ class Game:
         
         self.draw_text_with_outline(self.screen, "SETTINGS", self.get_font(100), "black", "white", (640, 100), outline_width=5)
         
-        # Input de IP del servidor
         self.draw_input_field(self.screen, "Server IP:", self.server_ip_input, self.get_font(45), "white", (640, 200), is_active=self.ip_input_active)
         
-        # Input de nombre de usuario
         self.draw_input_field(self.screen, "Username:", self.username_input, self.get_font(45), "white", (640, 300), is_active=self.username_input_active)
         
-        # Instrucciones
         self.draw_text_with_outline(self.screen, "Click on fields to edit, Enter to confirm", self.get_font(20), "black", "white", (640, 380), outline_width=2)
         
-        # Botones SEPARADOS
         for button in [self.save_settings_button, self.settings_back_button]:
             button.changeColor(menu_mouse_pos)
             button.update(self.screen)
@@ -430,7 +432,6 @@ class Game:
             print(f"Join failed: {reason}")
             
         def handle_state_update(message):
-            # Solo procesamos si estamos en el estado 'play' y el nivel existe
             if self.state == 'play' and self.level and hasattr(self.level, 'apply_game_state'):
                 game_state = message.get('game_state')
                 if game_state:
@@ -451,7 +452,6 @@ class Game:
         print(f"DEBUG: Player number: {self.player_number}")
         
         try:
-            # Siempre usar MultiplayerLevel
             from Code.Classes.multiplayer_level import MultiplayerLevel
             print("DEBUG: Creando MultiplayerLevel...")
             
@@ -513,9 +513,7 @@ class Game:
 
     def play(self):
         try:
-            # Si es multiplayer, usar la lógica de multiplayer
             if hasattr(self.level, 'player_number'):
-                # Lógica para multiplayer
                 result = self.level.run()
                 
                 if result == 'win':
@@ -528,7 +526,6 @@ class Game:
                     self.state = 'menu'
                     
             else:
-                # Lógica original para single player
                 if not self.level:
                     try:
                         self.level = Level(self.difficulty)  
@@ -614,7 +611,6 @@ class Game:
                 pygame.quit()
                 sys.exit()
             
-            # Manejar entrada de texto
             if self.state == 'join_game' and self.input_active:
                 self.handle_text_input(event)
             elif self.state == 'settings':
@@ -700,21 +696,20 @@ class Game:
                         self.difficulty = multiplayer_difficulties["easy"]
                         print(f"🎮 DEBUG: Botón EASY presionado, enviando start_game...")
                         print(f"🎮 DEBUG - Estado antes de enviar: connected={self.network_client.connected}, game_id={self.game_code}")
-                        self.network_client.send_start_game(self.difficulty)  # Enviar dificultad
+                        self.network_client.send_start_game(self.difficulty)
                         print("Host selected Easy difficulty")
                     elif self.multiplayer_medium_button.checkForInput(mouse_pos):
                         self.difficulty = multiplayer_difficulties["medium"]
-                        self.network_client.send_start_game(self.difficulty)  # Enviar dificultad
+                        self.network_client.send_start_game(self.difficulty)
                         print("Host selected Medium difficulty")
                     elif self.multiplayer_hard_button.checkForInput(mouse_pos):
                         self.difficulty = multiplayer_difficulties["hard"]
-                        self.network_client.send_start_game(self.difficulty)  # Enviar dificultad
+                        self.network_client.send_start_game(self.difficulty)
                         print("Host selected Hard difficulty")
                     elif self.multiplayer_back_button.checkForInput(mouse_pos):
                         self.state = 'lobby'
                 
                 elif self.state == 'settings':
-                    # Manejar clicks en inputs de configuración
                     ip_input_rect = pygame.Rect(440, 185, 400, 50)
                     username_input_rect = pygame.Rect(440, 285, 400, 50)
                     
@@ -725,17 +720,12 @@ class Game:
                         self.username_input_active = True
                         self.ip_input_active = False
                     elif self.save_settings_button.checkForInput(mouse_pos):
-                        # Guardar configuración
                         self.server_ip = self.server_ip_input
                         self.username = self.username_input
                         self.state = 'menu'
                         print(f"Settings saved - Server: {self.server_ip}, Username: {self.username}")
                     elif self.settings_back_button.checkForInput(mouse_pos):
                         self.state = 'menu'
-                        
-                elif self.state == 'select_difficulty':
-                    # El manejo de dificultad se hace en select_difficulty_menu
-                    pass
                         
                 elif self.state == 'end':
                     if self.restart_button.checkForInput(mouse_pos):
@@ -755,7 +745,6 @@ class Game:
         while True:
             self.check_events()
             
-            # Usar if-elif en lugar de match para compatibilidad
             if self.state == 'menu':
                 self.main_menu()
             elif self.state == 'choose':

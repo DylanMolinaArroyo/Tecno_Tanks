@@ -70,22 +70,22 @@ git clone https://github.com/DylanMA1/ProyectoSO1.git
 cd ProyectoSO1
 
 # Crear entorno virtual
-python -m venv venv
+python -m venv .venv
 
 # Activar entorno virtual
 # En Windows:
-venv\Scripts\activate
+.venv\Scripts\activate
 
 # En Linux / macOS:
 
 # Si usas bash o zsh:
-source venv/bin/activate
+source .venv/bin/activate
 
 # Si usas fish:
-source venv/bin/activate.fish
+source .venv/bin/activate.fish
 
 # Si usas csh o tcsh:
-source venv/bin/activate.csh
+source .venv/bin/activate.csh
 
 # Instalar dependencias
 pip install -r requirements.txt

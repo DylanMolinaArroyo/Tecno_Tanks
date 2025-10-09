@@ -50,11 +50,11 @@ class Level:
 
         # Power uo setup
         self.last_power_up_time = pygame.time.get_ticks()
-        self.power_up_interval = 10 * 1000  # 1 minute in ms
+        self.power_up_interval = 60 * 1000  # 1 minute in ms
 
         # Bonuses setup
         self.last_bonues_time = pygame.time.get_ticks()
-        self.bonus_interval = 20 * 1000  # 2 minutes in ms
+        self.bonus_interval = 120 * 1000  # 2 minutes in ms
 
         # Fortress setup
         self.fortress_shield_applied = False
@@ -62,8 +62,8 @@ class Level:
         # user interface
         self.ui = UI()
         
-        self.tile_map = {} # Un diccionario para encontrar tiles por su posición
-        self.destroyed_tiles_since_last_snapshot = [] # Registra los muros destruidos
+        self.tile_map = {}
+        self.destroyed_tiles_since_last_snapshot = []
 
         # Path request setup
         self.path_request = path_request.PathRequest()
@@ -104,7 +104,6 @@ class Level:
                                 case "1":
                                     Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'rocks', graphics['rock'])
                                 case "3":
-                                    #Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'walls', graphics['wall'])
                                     tile = Tile((x, y), [self.visible_sprites, self.attackble_sprites, self.obstacle_sprites], 'walls', graphics['wall'])
                                     self.tile_map[(row_index, col_index)] = tile # Guardar la tile
                                 case "5":
@@ -195,9 +194,7 @@ class Level:
                                 row = y // TILESIZE
                                 col = x // TILESIZE
                                 
-                                # --- AÑADIR ESTA LÍNEA ---
                                 self.destroyed_tiles_since_last_snapshot.append((row, col))
-                                # ---------------------------
 
                                 # Update matrix with -1
                                 self.matrix_route[0][row][col] = '-1'
@@ -337,7 +334,6 @@ class Level:
         for sprite in self.obstacle_sprites.sprites():
             if getattr(sprite, 'sprite_type', None) == 'barrier':
                 sprite.kill()
-
 
     def run(self):
         """
