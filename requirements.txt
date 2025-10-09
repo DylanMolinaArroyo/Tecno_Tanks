@@ -1,9 +1,5 @@
 pygame
 supabase 
-psycopg2
+psycopg2-binary
 uuid
-socket
-threading
-pickle
-time
-os
+netifaces

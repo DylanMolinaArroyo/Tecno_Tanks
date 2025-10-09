@@ -1,10 +1,8 @@
 import socket
 import threading
 import pickle
-import time
-import os
-from datetime import datetime
 import random 
+import netifaces
 
 try:
     from database import GameDatabase
@@ -85,7 +83,6 @@ class GameServer:
             # Obtener todas las IPs de interfaces de red
             print("Interfaces de red disponibles:")
             try:
-                import netifaces
                 for interface in netifaces.interfaces():
                     addrs = netifaces.ifaddresses(interface)
                     if netifaces.AF_INET in addrs:
@@ -147,7 +144,6 @@ class GameServer:
                     self.process_message(conn, message, addr)
                 
                 except socket.timeout:
-                    # Enviar ping para mantener la conexión activa
                     try:
                         print(f"Enviando ping a {addr}")
                         conn.send(pickle.dumps({'type': 'ping'}))
@@ -271,13 +267,12 @@ class GameServer:
             self.game_counter += 1
             game_code = f"game_{self.game_counter}"
             
-            # VERIFICAR SI EL JUEGO YA EXISTE EN MEMORIA
             while game_code in self.games:
                 self.game_counter += 1
                 game_code = f"game_{self.game_counter}"
             
             db_game_id = None
-            # Crear en base de datos si está disponible
+
             if self.db:
                 try:
                     db_game = self.db.create_game(game_code, username)

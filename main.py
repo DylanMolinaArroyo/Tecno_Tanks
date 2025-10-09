@@ -1,7 +1,5 @@
 import pygame, sys
 import time
-import socket
-#import os
 from Code.Utilities.settings import *
 from Code.UI.button import Button
 from Code.Classes.level import Level
@@ -211,7 +209,7 @@ class Game:
         self.screen.blit(self.bg_image, (0, 0))
         menu_mouse_pos = pygame.mouse.get_pos()
 
-        self.draw_text_with_outline(self.screen, "TECNO TANKS", self.get_font(100), "black", "white", (450, 200), outline_width=5)
+        self.draw_text_with_outline(self.screen, "TECNO TANKS", self.get_font(100), "black", "white", (500, 200), outline_width=5)
 
         for button in [self.play_button, self.quit_button, self.settings_button]:
             button.changeColor(menu_mouse_pos)
