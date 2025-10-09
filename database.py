@@ -8,8 +8,11 @@ from datetime import datetime
 
 class GameDatabase:
     def __init__(self):
+        """
+        Initializes the GameDatabase instance and connects to Supabase using environment variables.
+        """
+
         try:
-            # Configuración de Supabase - ACTUALIZA ESTOS VALORES
             self.supabase_url = os.getenv('SUPABASE_URL', 'https://ojrxxocofzecwcrxlpar.supabase.co/')
             self.supabase_key = os.getenv('SUPABASE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qcnh4b2NvZnplY3djcnhscGFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyODg3OTQsImV4cCI6MjA3NDg2NDc5NH0.aFlkJBq3OYs3IhAqRJj56mmcG7kJGcAXobHAxlFfKlE')
             self.supabase: Client = create_client(self.supabase_url, self.supabase_key)
@@ -20,11 +23,18 @@ class GameDatabase:
             print(f"Error inicializando base de datos: {e}")
             raise
     
-    # --- Jugadores ---
     def create_or_get_player(self, username: str) -> Optional[Dict]:
-        """Crea un nuevo jugador o devuelve el existente"""
+        """
+        Creates a new player with the given username or returns the existing player if found.
+
+        Args:
+            username (str): The username of the player.
+
+        Returns:
+            Optional[Dict]: The player record if found or created, otherwise None.
+        """
+       
         try:
-            # Verificar si el jugador ya existe
             response = self.supabase.table('players')\
                 .select('*')\
                 .eq('username', username)\
@@ -34,7 +44,6 @@ class GameDatabase:
                 print(f"Jugador existente: {username}")
                 return response.data[0]
             
-            # Crear nuevo jugador
             new_player = {
                 'username': username,
                 'total_games_played': 0,
@@ -56,9 +65,15 @@ class GameDatabase:
             return None
     
     def update_player_stats(self, player_id: str, kills: int = 0, won: bool = False):
-        """Actualiza estadísticas del jugador"""
+        """
+        Updates the statistics of a player.
+
+        Args:
+            player_id (str): The ID of the player.
+            kills (int, optional): Number of kills to add. Default is 0.
+            won (bool, optional): Whether the player won the game. Default is False.
+        """
         try:
-            # Obtener estadísticas actuales
             response = self.supabase.table('players')\
                 .select('*')\
                 .eq('id', player_id)\
@@ -88,7 +103,18 @@ class GameDatabase:
     
     # --- Partidas ---
     def create_game(self, game_code: str, host_username: str, difficulty: str = "multiplayer") -> Optional[Dict]:
-        """Crea una nueva partida"""
+        """
+        Creates a new game with the given code, host username, and difficulty.
+
+        Args:
+            game_code (str): The unique code for the game.
+            host_username (str): The username of the host player.
+            difficulty (str, optional): The difficulty level. Default is "multiplayer".
+
+        Returns:
+            Optional[Dict]: The created game record, or None if creation failed.
+        """ 
+
         try:
             # Obtener o crear jugador host
             host_player = self.create_or_get_player(host_username)
@@ -108,10 +134,8 @@ class GameDatabase:
             game = response.data[0] if response.data else None
             
             if game:
-                # Registrar al host en la partida
                 self.add_player_to_game(game['id'], host_player['id'], 1)
                 
-                # Evento de creación
                 self.log_game_event(
                     game_id=game['id'],
                     player_id=host_player['id'],
@@ -127,7 +151,18 @@ class GameDatabase:
             return None
     
     def add_player_to_game(self, game_id: str, player_id: str, player_number: int) -> bool:
-        """Añade un jugador a la partida"""
+        """
+        Adds a player to a game.
+
+        Args:
+            game_id (str): The ID of the game.
+            player_id (str): The ID of the player.
+            player_number (int): The player's number in the game.
+
+        Returns:
+            bool: True if the player was added successfully, False otherwise.
+        """
+
         try:
             game_player = {
                 'game_id': game_id,
@@ -137,10 +172,8 @@ class GameDatabase:
             
             response = self.supabase.table('game_players').insert(game_player).execute()
             
-            # Actualizar contador de jugadores
             self.update_player_count(game_id)
             
-            # Evento de unión
             self.log_game_event(
                 game_id=game_id,
                 player_id=player_id,
@@ -155,9 +188,14 @@ class GameDatabase:
             return False
     
     def update_player_count(self, game_id: str):
-        """Actualiza el contador de jugadores en la partida"""
+        """
+        Updates the current player count for a game.
+
+        Args:
+            game_id (str): The ID of the game.
+        """
+
         try:
-            # Contar jugadores en la partida
             response = self.supabase.table('game_players')\
                 .select('id', count='exact')\
                 .eq('game_id', game_id)\
@@ -165,7 +203,6 @@ class GameDatabase:
             
             player_count = response.count
             
-            # Actualizar partida
             self.supabase.table('games')\
                 .update({'current_players': player_count})\
                 .eq('id', game_id)\
@@ -177,7 +214,13 @@ class GameDatabase:
             print(f"Error actualizando contador: {e}")
     
     def start_game(self, game_id: str):
-        """Marca una partida como iniciada"""
+        """
+        Marks a game as started and logs the event.
+
+        Args:
+            game_id (str): The ID of the game.
+        """
+
         try:
             updates = {
                 'status': 'active',
@@ -189,7 +232,6 @@ class GameDatabase:
                 .eq('id', game_id)\
                 .execute()
                 
-            # Evento de inicio
             self.log_game_event(
                 game_id=game_id,
                 event_type='game_started'
@@ -201,7 +243,14 @@ class GameDatabase:
             print(f"Error iniciando partida: {e}")
     
     def finish_game(self, game_id: str, winner_player_id: str = None):
-        """Marca una partida como finalizada"""
+        """
+        Marks a game as finished and logs the event.
+
+        Args:
+            game_id (str): The ID of the game.
+            winner_player_id (str, optional): The ID of the winning player.
+        """
+
         try:
             updates = {
                 'status': 'finished',
@@ -226,15 +275,19 @@ class GameDatabase:
         except Exception as e:
             print(f"Error finalizando partida: {e}")
     
-    # --- Estadísticas de Partida ---
     def save_game_stats(self, game_id: str, player_stats: List[Dict]):
-        """Guarda las estadísticas finales de una partida"""
+        """
+        Saves the final statistics for all players in a game.
+
+        Args:
+            game_id (str): The ID of the game.
+            player_stats (List[Dict]): List of player statistics dictionaries.
+        """
+
         try:
             for stats in player_stats:
-                # Insertar estadísticas
                 self.supabase.table('game_stats').insert(stats).execute()
                 
-                # Actualizar estadísticas globales del jugador
                 self.update_player_stats(
                     player_id=stats['player_id'],
                     kills=stats.get('kills', 0),
@@ -246,9 +299,17 @@ class GameDatabase:
         except Exception as e:
             print(f"Error guardando estadísticas: {e}")
     
-    # --- Eventos ---
     def log_game_event(self, game_id: str, event_type: str, player_id: str = None, event_data: Dict = None):
-        """Registra un evento de la partida"""
+        """
+        Logs an event for a game.
+
+        Args:
+            game_id (str): The ID of the game.
+            event_type (str): The type of event.
+            player_id (str, optional): The ID of the player related to the event.
+            event_data (Dict, optional): Additional event data.
+        """
+
         try:
             event = {
                 'game_id': game_id,
@@ -266,9 +327,17 @@ class GameDatabase:
         except Exception as e:
             print(f"Error registrando evento: {e}")
     
-    # --- Consultas ---
     def get_game_by_code(self, game_code: str) -> Optional[Dict]:
-        """Obtiene una partida por su código"""
+        """
+        Retrieves a game by its code.
+
+        Args:
+            game_code (str): The unique code of the game.
+
+        Returns:
+            Optional[Dict]: The game record if found, otherwise None.
+        """
+
         try:
             response = self.supabase.table('games')\
                 .select('*')\
@@ -282,7 +351,16 @@ class GameDatabase:
             return None
     
     def get_game_players(self, game_id: str) -> List[Dict]:
-        """Obtiene los jugadores de una partida"""
+        """
+        Retrieves all players for a given game.
+
+        Args:
+            game_id (str): The ID of the game.
+
+        Returns:
+            List[Dict]: List of player records for the game.
+        """
+        
         try:
             response = self.supabase.table('game_players')\
                 .select('*, players(username)')\

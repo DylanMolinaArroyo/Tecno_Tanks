@@ -6,7 +6,6 @@ import os
 from datetime import datetime
 import random 
 
-# Importar el módulo de base de datos
 try:
     from database import GameDatabase
     DB_AVAILABLE = True
@@ -16,6 +15,14 @@ except ImportError:
 
 class GameServer:
     def __init__(self, host='0.0.0.0', port=5555):
+        """
+        Initializes the GameServer instance, sets up the socket, and connects to the database if available.
+
+        Args:
+            host (str, optional): Host IP address to bind the server. Default is '0.0.0.0'.
+            port (int, optional): Port number to bind the server. Default is 5555.
+        """
+
         self.host = host
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -25,7 +32,6 @@ class GameServer:
         self.game_counter = 0
         self.running = True
         
-        # Base de datos
         if DB_AVAILABLE:
             self.db = GameDatabase()
             print("Base de datos conectada correctamente")
@@ -33,11 +39,14 @@ class GameServer:
             self.db = None
             print("Servidor ejecutándose sin base de datos")
         
-        # Mapeo de conexiones a usuarios
         self.connection_users = {}  
         self.connection_game = {}   
         
     def start(self):
+        """
+        Starts the server, binds the socket, listens for connections, and launches threads for accepting connections and handling console commands.
+        """
+
         try:
             self.socket.bind((self.host, self.port))
             self.socket.listen()
@@ -61,7 +70,9 @@ class GameServer:
             self.cleanup()
     
     def show_network_info(self):
-        """Muestra información de red para ayudar a la conexión"""
+        """
+        Displays network information such as hostname, local IP, and available network interfaces.
+        """
         try:
             # Obtener nombre del host
             hostname = socket.gethostname()
@@ -89,6 +100,10 @@ class GameServer:
             print(f"Error obteniendo información de red: {e}")
     
     def accept_connections(self):
+        """
+        Continuously accepts incoming client connections and starts a thread for each client.
+        """
+
         while self.running:
             try:
                 conn, addr = self.socket.accept()
@@ -106,6 +121,14 @@ class GameServer:
                 break
     
     def handle_client(self, conn, addr):
+        """
+        Handles communication with a connected client, processes messages, and manages timeouts and disconnections.
+
+        Args:
+            conn: The socket connection object.
+            addr: The address of the connected client.
+        """
+
         print(f"Manejando cliente desde {addr}")
     
         conn.settimeout(60.0)  
@@ -150,6 +173,15 @@ class GameServer:
             print(f"Conexión con {addr} cerrada")
     
     def process_message(self, conn, message, addr):
+        """
+        Processes a message received from a client and performs the corresponding server action.
+
+        Args:
+            conn: The socket connection object.
+            message (dict): The message received from the client.
+            addr: The address of the client.
+        """
+
         command = message.get('command')
         
         if command == 'create_game':
@@ -207,7 +239,6 @@ class GameServer:
             
         elif command == 'start_game':
             game_id = message.get('game_id')
-            #self.start_game(game_id)
             difficulty = message.get('difficulty')
             print(f"DEBUG: start_game recibido - game_id: {game_id}, difficulty: {difficulty}")
             self.start_game(game_id, difficulty)
@@ -225,7 +256,17 @@ class GameServer:
             conn.send(pickle.dumps({'type': 'pong'}))
     
     def create_game(self, conn, username: str):
-        """Crea juego en base de datos y en memoria"""
+        """
+        Creates a new game in memory and in the database (if available).
+
+        Args:
+            conn: The socket connection object of the host player.
+            username (str): The username of the host player.
+
+        Returns:
+            str or None: The game code if created successfully, otherwise None.
+        """
+
         try:
             self.game_counter += 1
             game_code = f"game_{self.game_counter}"
@@ -270,7 +311,18 @@ class GameServer:
             return None
     
     def join_game(self, conn, game_id, username: str):
-        """Une jugador a partida en base de datos y memoria"""
+        """
+        Adds a player to an existing game in memory and in the database (if available).
+
+        Args:
+            conn: The socket connection object of the joining player.
+            game_id (str): The code of the game to join.
+            username (str): The username of the joining player.
+
+        Returns:
+            bool: True if the player was added successfully, False otherwise.
+        """
+
         try:
             if game_id in self.games and self.games[game_id]['connections'][1] is None:
                 
@@ -309,7 +361,14 @@ class GameServer:
             return False
             
     def start_game(self, game_id, difficulty=None):
-        """Inicia una partida con la dificultad especificada y una semilla aleatoria"""
+        """
+        Starts a game, sets its difficulty and random seed, and notifies all players.
+
+        Args:
+            game_id (str): The code of the game to start.
+            difficulty (optional): The difficulty level for the game.
+        """
+
         print(f"🎮 SERVER DEBUG: start_game llamado - game_id: {game_id}, existe: {game_id in self.games}")
         try:
             if game_id in self.games:
@@ -345,7 +404,14 @@ class GameServer:
             traceback.print_exc()
     
     def handle_player_ready(self, game_id, conn):
-        """Maneja cuando un jugador está listo"""
+        """
+        Handles when a player marks themselves as ready and starts the game when all players are ready.
+
+        Args:
+            game_id (str): The code of the game.
+            conn: The socket connection object of the ready player.
+        """
+            
         try:
             if game_id in self.games:
                 self.games[game_id]['game_state']['players_ready'] += 1
@@ -367,7 +433,14 @@ class GameServer:
             print(f"Error manejando jugador listo: {e}")
     
     def save_game_stats(self, game_id, stats):
-        """Guarda estadísticas de la partida"""
+        """
+        Saves the final statistics of a game to the database.
+
+        Args:
+            game_id (str): The code of the game.
+            stats (list): List of player statistics dictionaries.
+        """
+
         try:
             if self.db and game_id in self.games and self.games[game_id]['db_id']:
                 # Preparar estadísticas para la base de datos
@@ -391,7 +464,15 @@ class GameServer:
             print(f"Error guardando estadísticas: {e}")
     
     def broadcast_to_game(self, game_id, message, sender_conn=None):
-        """Envía mensaje a todos los jugadores de una partida"""
+        """
+        Sends a message to all players in a game except the sender.
+
+        Args:
+            game_id (str): The code of the game.
+            message (dict): The message to send.
+            sender_conn (optional): The connection to exclude from broadcasting.
+        """
+
         print(f"SERVER DEBUG: broadcast_to_game - game_id: {game_id}, mensaje: {message}")
         if game_id in self.games:
             for conn in self.games[game_id]['connections']:
@@ -407,7 +488,14 @@ class GameServer:
             print(f"SERVER ERROR: Juego {game_id} no encontrado para broadcast")
     
     def send_to_connection(self, conn, message):
-        """Envía mensaje a una conexión específica"""
+        """
+        Sends a message to a specific connection.
+
+        Args:
+            conn: The socket connection object.
+            message (dict): The message to send.
+        """
+
         try:
             conn.send(pickle.dumps(message))
         except Exception as e:
@@ -415,7 +503,13 @@ class GameServer:
             self.remove_connection(conn)
     
     def remove_connection(self, conn):
-        """Maneja desconexión limpiando memoria y base de datos"""
+        """
+        Handles client disconnection, cleans up memory and database records, and notifies other players.
+
+        Args:
+            conn: The socket connection object to remove.
+        """
+
         try:
             if conn in self.connections:
                 self.connections.remove(conn)
@@ -453,13 +547,11 @@ class GameServer:
                     
                     # Si ambos jugadores están desconectados, eliminar juego
                     if all(conn is None for conn in game['connections']):
-                        # Marcar como finalizado en base de datos
                         if self.db and game['db_id']:
                             self.db.finish_game(game['db_id'])
                         
                         del self.games[game_id]
                         print(f"Juego {game_id} eliminado (todos desconectados)")
-                    # Si solo queda un jugador, reducir contador
                     elif game['connections'][other_index] is not None:
                         game['game_state']['players_ready'] = 0
                         print(f"Juego {game_id} continúa con 1 jugador")
@@ -474,7 +566,13 @@ class GameServer:
             print(f"Error removiendo conexión: {e}")
     
     def get_server_status(self):
-        """Obtiene estado del servidor"""
+        """
+        Returns the current status of the server including active connections, games, and players.
+
+        Returns:
+            dict: Server status information.
+        """
+
         active_games = sum(1 for game in self.games.values() 
                           if any(conn is not None for conn in game['connections']))
         total_players = sum(1 for game in self.games.values() 
@@ -489,7 +587,10 @@ class GameServer:
         }
     
     def handle_commands(self):
-        """Maneja comandos de consola del servidor"""
+        """
+        Handles server console commands such as 'quit', 'status', 'games', and 'help'.
+        """
+
         while self.running:
             try:
                 cmd = input().lower().strip()
@@ -548,17 +649,16 @@ class GameServer:
                 print(f"Error procesando comando: {e}")
     
     def cleanup(self):
-        """Limpieza antes de cerrar el servidor"""
-        print("Realizando limpieza...")
+        """
+        Cleans up resources before shutting down the server, closes connections, and marks games as finished in the database.
+        """        
         
-        # Cerrar todas las conexiones
         for conn in self.connections:
             try:
                 conn.close()
             except:
                 pass
         
-        # Marcar partidas como finalizadas en BD
         if self.db:
             for game_id, game in self.games.items():
                 if game['db_id']:
