@@ -158,4 +158,17 @@ El proyecto demuestra cómo integrar **procesos**, **hilos**, **comunicación TC
 
 📄 **Autor:** Dylan Molina, Fabricio ALfaro
 📆 **Versión:** 1.0.0
+
+sequenceDiagram
+    participant Cliente as Cliente DNS
+    participant ServerC as DNS Server (C)
+    participant API as DNS API (Python)
+    participant Remote as Servidor DNS remoto
+    
+    Cliente->>ServerC: Consulta DNS (UDP/53)
+    ServerC->>API: HTTP + Base64 encoding
+    API->>Remote: UDP a 8.8.8.8
+    Remote-->>API: Respuesta DNS
+    API-->>ServerC: HTTP Response
+    ServerC-->>Cliente: Respuesta DNS
 🔗 **Licencia:** MIT
