@@ -149,13 +149,6 @@ Los clientes requieren agregar la IP del servidor en la pantalla "Settings" para
 
 ---
 
-## 7. Conclusión
-
-**Tecno Tanks** combina diseño de videojuegos con conceptos avanzados de **programación concurrente** y **sistemas distribuidos**.
-El proyecto demuestra cómo integrar **procesos**, **hilos**, **comunicación TCP** y **sincronización de recursos** dentro de un entorno interactivo y educativo, ofreciendo una experiencia que une teoría y práctica de manera lúdica.
-
----
-
 📄 **Autors:** Dylan Molina Arroyo, Fabricio Alfaro
 📆 **Versión:** 1.0.0
 
