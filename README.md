@@ -149,5 +149,3 @@ Clients need to add the server IP on the "Settings" screen to connect and synchr
 
 📄 **Autors:** Dylan Molina Arroyo, Fabricio Alfaro
 📆 **Versión:** 1.0.0
-
-🔗 **License:** MIT
