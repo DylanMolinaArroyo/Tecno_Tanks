@@ -98,7 +98,7 @@ If a test window appears, the installation was successful.
 
 ---
 
-# 4. `.env` File Configuration
+## 4. `.env` File Configuration
 
 The project uses an environment file (`.env`) to store **sensitive configuration variables**, such as database credentials and external service keys (e.g., Supabase).
 
