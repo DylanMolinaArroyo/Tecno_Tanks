@@ -16,7 +16,7 @@ The development focus combines retro gameplay with advanced technical design, im
 The architecture follows a **distributed client-server** model.
 Each player runs a Pygame client that communicates with a **central server** to keep the game state synchronized (positions, shots, collisions, and structure destruction).
 
-![Architecture Diagram](/Architecture_diagram.png)
+![Arquitecture Diagram](/Arquitecture_diagram.png)
 
 ### 2.2 Main Components
 
