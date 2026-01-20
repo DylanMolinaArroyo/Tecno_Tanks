@@ -156,7 +156,7 @@ El proyecto demuestra cómo integrar **procesos**, **hilos**, **comunicación TC
 
 ---
 
-📄 **Autor:** Dylan Molina, Fabricio ALfaro
+📄 **Autors:** Dylan Molina Arroyo, Fabricio Alfaro
 📆 **Versión:** 1.0.0
 
 🔗 **Licencia:** MIT
