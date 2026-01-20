@@ -1,155 +1,153 @@
 # Tecno Tanks
 
-## 1. Descripción General
+## 1. Overview
 
-**Tecno Tanks** es una reinterpretación moderna del clásico *Battle City (Tank 1990)*, desarrollada en **Python** utilizando la librería **Pygame**.
-El proyecto tiene como propósito ofrecer una experiencia práctica para la aplicación de conceptos de **Sistemas Operativos** y **Sistemas Distribuidos**, integrando la **gestión de procesos**, **sincronización**, **comunicación entre hilos** y **control de recursos en tiempo real**.
+**Tecno Tanks** is a modern reinterpretation of the classic *Battle City (Tank 1990)*, developed in **Python** using the **Pygame** library.
+The project aims to provide a hands-on experience for applying concepts from **Operating Systems** and **Distributed Systems**, integrating **process management**, **synchronization**, **inter-thread communication**, and **real-time resource control**.
 
-El enfoque del desarrollo combina la jugabilidad retro con un diseño técnico avanzado, implementando concurrencia, control de acceso a recursos compartidos y comunicación en red cliente-servidor.
-
----
-
-## 2. Arquitectura del Sistema
-
-### 2.1 Estructura General
-
-La arquitectura sigue un modelo **cliente-servidor distribuido**.
-Cada jugador ejecuta un cliente Pygame que se comunica con un **servidor central** para mantener sincronizado el estado del juego (posiciones, disparos, colisiones y destrucción de estructuras).
-
-![Arquitecture Diagram](/Arquitecture_diagram.png)
-
-### 2.2 Componentes Principales
-
-#### Cliente (Juego Pygame)
-
-* Renderiza gráficos, animaciones y efectos visuales.
-* Captura entradas del usuario (movimiento, disparo, interacción).
-* Envía eventos al servidor (movimiento, ataque, destrucción).
-* Actualiza el entorno local según los mensajes recibidos.
-
-#### Servidor
-
-* Gestiona el **estado global del juego**.
-* Sincroniza posiciones, colisiones y eventos entre jugadores.
-* Controla las **variables compartidas** y mantiene la consistencia del entorno.
-* Supervisa los procesos de conexión, desconexión y sincronización de jugadores.
-
-#### Recursos
-
-* **Sprites y sonidos:** almacenados en la carpeta `/Assets/`.
-* **Mapas CSV:** definen el terreno, muros, pasto, barreras y fortaleza.
-* **Archivo `requirements.txt`:** lista las dependencias del proyecto.
-
-### 2.3 Principios de Sistemas Operativos Aplicados
-
-El proyecto tiene como objetivo demostrar conceptos fundamentales de sistemas operativos y distribuidos:
-
-* **Gestión de procesos y estados:** tanques y proyectiles se ejecutan como procesos con estados (activo, destruido, respawn).
-* **Sincronización de hilos:** control concurrente de animaciones, colisiones y disparos.
-* **Variables compartidas:** estado global del mapa y recursos sincronizados.
-* **Planificación y asignación de recursos:** control de acceso al CPU y tiempos de actualización.
-* **Comunicación distribuida:** mensajes entre clientes y servidor mediante **web sockets**.
-* **Monitoreo y tolerancia a la latencia:** ajustes de renderizado frente al retardo de red.
+The development focus combines retro gameplay with advanced technical design, implementing concurrency, shared resource access control, and client-server network communication.
 
 ---
 
-## 3. Instalación
+## 2. System Architecture
 
-### 3.1 Requisitos Previos
+### 2.1 General Structure
 
-* **Python:** 3.10 o superior
-* **Pip:** gestor de paquetes de Python
-* **Sistemas compatibles:** Windows, Linux o macOS
-* **Conexión a Internet:** requerida para modo en línea
+The architecture follows a **distributed client-server** model.
+Each player runs a Pygame client that communicates with a **central server** to keep the game state synchronized (positions, shots, collisions, and structure destruction).
 
-### 3.2 Pasos de Instalación
+![Architecture Diagram](/Architecture_diagram.png)
+
+### 2.2 Main Components
+
+#### Client (Pygame Game)
+
+* Renders graphics, animations, and visual effects.
+* Captures user input (movement, shooting, interaction).
+* Sends events to the server (movement, attack, destruction).
+* Updates the local environment based on received messages.
+
+#### Server
+
+* Manages the **global game state**.
+* Synchronizes positions, collisions, and events between players.
+* Controls **shared variables** and maintains environment consistency.
+* Supervises player connection, disconnection, and synchronization processes.
+
+#### Resources
+
+* **Sprites and sounds:** stored in the `/Assets/` folder.
+* **CSV maps:** define terrain, walls, grass, barriers, and fortress.
+* **`requirements.txt` file:** lists project dependencies.
+
+### 2.3 Applied Operating Systems Principles
+
+The project aims to demonstrate fundamental operating and distributed systems concepts:
+
+* **Process and state management:** tanks and projectiles run as processes with states (active, destroyed, respawn).
+* **Thread synchronization:** concurrent control of animations, collisions, and shots.
+* **Shared variables:** synchronized global map state and resources.
+* **Scheduling and resource allocation:** CPU access control and update times.
+* **Distributed communication:** messages between clients and server via **web sockets**.
+* **Monitoring and latency tolerance:** rendering adjustments for network delay.
+
+---
+
+## 3. Installation
+
+### 3.1 Prerequisites
+
+* **Python:** 3.10 or higher
+* **Pip:** Python package manager
+* **Compatible systems:** Windows, Linux, or macOS
+* **Internet connection:** required for online mode
+
+### 3.2 Installation Steps
 
 ```bash
-# Clonar el repositorio
+# Clone the repository
 git clone https://github.com/DylanMA1/ProyectoSO1.git
 cd ProyectoSO1
 
-# Crear entorno virtual
+# Create virtual environment
 python -m venv .venv
 
-# Activar entorno virtual
-# En Windows:
+# Activate virtual environment
+# On Windows:
 .venv\Scripts\activate
 
-# En Linux / macOS:
+# On Linux / macOS:
 
-# Si usas bash o zsh:
+# If using bash or zsh:
 source .venv/bin/activate
 
-# Si usas fish:
+# If using fish:
 source .venv/bin/activate.fish
 
-# Si usas csh o tcsh:
+# If using csh or tcsh:
 source .venv/bin/activate.csh
 
-# Instalar dependencias
+# Install dependencies
 pip install -r requirements.txt
 
-# Verificar instalación de Pygame
+# Verify Pygame installation
 python -m pygame.examples.aliens
 ```
 
-Si aparece una ventana de prueba, la instalación fue exitosa.
+If a test window appears, the installation was successful.
 
 ---
 
-## 4. Despliegue y Ejecución
+## 4. Deployment and Execution
 
-### 4.1 Modo Local (Offline)
+### 4.1 Local Mode (Offline)
 
-Ejecutar el juego de manera individual:
+Run the game individually:
 
 ```bash
 python main.py
 ```
 
-### 4.2 Modo Distribuido (Online)
+### 4.2 Distributed Mode (Online)
 
-Ejecutar el servidor en la nube o en otra máquina local:
+Run the server in the cloud or on another local machine:
 
 ```bash
 python server.py
 ```
 
-Los clientes requieren agregar la IP del servidor en la pantalla "Settings" para conectarse y sincronizar el estado global del juego (mapa, tanques, colisiones, etc.).
+Clients need to add the server IP on the "Settings" screen to connect and synchronize the global game state (map, tanks, collisions, etc.).
 
 ---
 
-## 5. Descripción del Entorno y Recursos
+## 5. Environment and Resources Description
 
-| Carpeta / Archivo    | Descripción                                                   |
+| Folder / File        | Description                                                   |
 | -------------------- | ------------------------------------------------------------- |
-| **Assets/**          | Sprites, sonidos y mapas del juego                            |
-| **Code/**            | Código fuente principal                                       |
-| **Code/Entities/**   | Clases de entidades (Jugador, Enemigo, Proyectil, Estructura) |
-| **Code/Utilities/**  | Configuración general y funciones utilitarias                 |
-| **requirements.txt** | Dependencias del proyecto                                     |
-| **main.py**          | Cliente principal del juego                                   |
-| **server.py**        | Lógica de sincronización en red                               |
+| **Assets/**          | Game sprites, sounds, and maps                                |
+| **Code/**            | Main source code                                              |
+| **Code/Entities/**   | Entity classes (Player, Enemy, Projectile, Structure)         |
+| **Code/Utilities/**  | General configuration and utility functions                   |
+| **requirements.txt** | Project dependencies                                          |
+| **main.py**          | Main game client                                              | 
+| **server.py**        | Network synchronization logic                                 |
 
 ---
 
-## 6. Consideraciones Técnicas
+## 6. Technical Considerations
 
-* Motor de renderizado **Pygame**: 60 FPS por defecto.
-* Comunicación en red mediante **Web Sockets** y paquetes **JSON**.
-* Agrupación de sprites:
-
+* **Pygame** rendering engine: 60 FPS by default.
+* Network communication via **Web Sockets** and **JSON** packets.
+* Sprite grouping:
   * `visible_sprites`
   * `attackable_sprites`
   * `obstacle_sprites`
-    
-* Mapa basado en archivos CSV (`-1` representa espacio vacío).
-* Soporte para destrucción de la fortaleza, sincronización de barreras y control de colisiones distribuidas.
+* CSV file-based map (-1 represents empty space).
+* Support for fortress destruction, barrier synchronization, and distributed collision control.
 
 ---
 
 📄 **Autors:** Dylan Molina Arroyo, Fabricio Alfaro
 📆 **Versión:** 1.0.0
 
-🔗 **Licencia:** MIT
+🔗 **License:** MIT
