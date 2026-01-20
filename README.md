@@ -98,9 +98,45 @@ If a test window appears, the installation was successful.
 
 ---
 
-## 4. Deployment and Execution
+# 4. `.env` File Configuration
 
-### 4.1 Local Mode (Offline)
+The project uses an environment file (`.env`) to store **sensitive configuration variables**, such as database credentials and external service keys (e.g., Supabase).
+
+### 4.2 Required Variables
+
+Tecno Tanks requires the following variables in the `.env` file:
+
+* **SUPABASE_URL**: URL of your Supabase project.
+* **SUPABASE_KEY**: Secret access key for Supabase.
+* **DB_HOST**: IP address or host where your database runs (e.g., `localhost` or a remote server).
+* **DB_NAME**: Name of the database.
+* **DB_USER**: User with permissions to access the database.
+* **DB_PASSWORD**: Password for the database user.
+* **DB_PORT**: Port on which the database listens (e.g., `5432` for PostgreSQL).
+
+### 4.3 Creating the `.env` File
+
+1. In the root of the project, create a file named `.env`.
+2. Copy the required variables.
+3. Assign the corresponding value to each variable.
+
+Example:
+
+```env
+SUPABASE_URL=https://xyzcompany.supabase.co
+SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR...
+DB_HOST=localhost
+DB_NAME=tecnotanks
+DB_USER=admin
+DB_PASSWORD=MySecretPassword123
+DB_PORT=5432
+```
+
+---
+
+## 5. Deployment and Execution
+
+### 5.1 Local Mode (Offline)
 
 Run the game individually:
 
@@ -108,7 +144,7 @@ Run the game individually:
 python main.py
 ```
 
-### 4.2 Distributed Mode (Online)
+### 5.2 Distributed Mode (Online)
 
 Run the server in the cloud or on another local machine:
 
@@ -120,7 +156,7 @@ Clients need to add the server IP on the "Settings" screen to connect and synchr
 
 ---
 
-## 5. Environment and Resources Description
+## 6. Environment and Resources Description
 
 | Folder / File        | Description                                                   |
 | -------------------- | ------------------------------------------------------------- |
@@ -134,7 +170,7 @@ Clients need to add the server IP on the "Settings" screen to connect and synchr
 
 ---
 
-## 6. Technical Considerations
+## 7. Technical Considerations
 
 * **Pygame** rendering engine: 60 FPS by default.
 * Network communication via **Web Sockets** and **JSON** packets.
