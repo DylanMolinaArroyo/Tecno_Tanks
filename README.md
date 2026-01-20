@@ -1,4 +1,4 @@
-# Documentación Técnica — Tecno Tanks
+# Tecno Tanks
 
 ## 1. Descripción General
 
